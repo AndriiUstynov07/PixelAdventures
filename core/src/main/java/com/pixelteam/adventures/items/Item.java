@@ -1,5 +1,6 @@
 package com.pixelteam.adventures.items;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.pixelteam.adventures.entities.player.Player;
 
 public abstract class Item {

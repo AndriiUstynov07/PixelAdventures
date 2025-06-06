@@ -1,7 +1,12 @@
-package com.pixelteam.adventures.entities.enemies;
+/*package com.pixelteam.adventures.entities.enemies;
+
+import java.util.List;
 
 public class MiniBoss extends Enemy {
     protected List<BasicEnemy> minions;
 
-    public void spawnMinions();
+    public void spawnMinions() {
+
+    }
 }
+*/

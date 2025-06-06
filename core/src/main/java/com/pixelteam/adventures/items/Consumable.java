@@ -7,6 +7,6 @@ public class Consumable extends Item {
 
     @Override
     public void use(Player player) {
-        player.heal(healAmount);
+        //player.heal(healAmount);
     }
 }

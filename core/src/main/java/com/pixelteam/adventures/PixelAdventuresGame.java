@@ -5,16 +5,37 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.pixelteam.adventures.entities.player.Player;
+import com.pixelteam.adventures.weapons.MeleeWeapon;
 
 public class PixelAdventuresGame extends ApplicationAdapter {
-    SpriteBatch batch;
-    Texture playerTexture;
-
+    private SpriteBatch batch;
+    private Texture backgroundTexture;
+    private Player player;
+    private MeleeWeapon sword;
+    private float deltaTime;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
+
+        // Завантаження фонового зображення
+        backgroundTexture = new Texture(Gdx.files.internal("images/environment/tiles/map1.png"));
+
+        // Завантаження текстури гравця
+        Texture playerTexture = new Texture(Gdx.files.internal("images/player/player.png"));
+
+        // Створення гравця
+        player = new Player(Gdx.graphics.getWidth() / 2 - 32, Gdx.graphics.getHeight() / 2 - 32);
+        player.setTexture(playerTexture);
+
+        // Створення меча
+        sword = new MeleeWeapon("Sword", 10, 1.0f, "images/weapons/sword.png");
+
+        // Екіпіровка меча гравцем
+        player.equipWeapon(sword);
 
         // Pixel perfect налаштування
         Gdx.graphics.setVSync(true);
@@ -26,20 +47,30 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     @Override
     public void render() {
-        // !!! ЗМІНА ТУТ: Встановлюємо червоний колір фону
-        // Значення 1f, 0f, 0f, 1f відповідають R (червоний), G (зелений), B (синій) і A (альфа/прозорість)
-        ScreenUtils.clear(1f, 0f, 0f, 1f); // Яскраво-червоний фон
+        // Оновлення deltaTime
+        deltaTime = Gdx.graphics.getDeltaTime();
+
+        // Оновлення гравця
+        player.update(deltaTime);
+
+        // Очищаємо екран
+        ScreenUtils.clear(0, 0, 0, 1);
 
         batch.begin();
-        // Тут буде рендеринг PixelAdventures
+        // Малюємо фонове зображення на весь екран
+        batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        // Рендеринг гравця
+        player.render(batch);
+
         batch.end();
     }
 
     @Override
     public void dispose() {
         batch.dispose();
-        if (playerTexture != null) playerTexture.dispose();
+        if (backgroundTexture != null) backgroundTexture.dispose();
+        if (player != null && player.getTexture() != null) player.getTexture().dispose();
+        if (sword != null) sword.dispose();
     }
-
-
 }

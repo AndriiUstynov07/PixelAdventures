@@ -1,5 +1,6 @@
 package com.pixelteam.adventures.entities.player;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -15,6 +16,8 @@ public class Player extends Character {
     private PlayerController controller;
     private float attackCooldown;
     private boolean isAttacking;
+    private float swordRotation;
+    private float swordAttackAnimation;
 
     public Player(float x, float y) {
         position = new Vector2(x, y);
@@ -33,6 +36,8 @@ public class Player extends Character {
         controller = new PlayerController(this);
         attackCooldown = 0;
         isAttacking = false;
+        swordRotation = 15; // 15 degrees to the right
+        swordAttackAnimation = 0;
     }
 
     @Override
@@ -42,26 +47,56 @@ public class Player extends Character {
         // Update position based on velocity
         position.add(velocity.x * deltaTime, velocity.y * deltaTime);
 
+        // Apply map boundaries
+        // Prevent player from moving outside the screen
+        if (position.x < 0) position.x = 0;
+        if (position.y < 0) position.y = 0;
+        if (position.x > Gdx.graphics.getWidth() - width) position.x = Gdx.graphics.getWidth() - width;
+        if (position.y > Gdx.graphics.getHeight() - height) position.y = Gdx.graphics.getHeight() - height;
+
         // Update attack cooldown
         if (attackCooldown > 0) {
             attackCooldown -= deltaTime;
+        }
+
+        // Update sword attack animation
+        if (isAttacking) {
+            // Animate sword swing down by 30 degrees over 0.25 seconds
+            swordAttackAnimation += 120 * deltaTime; // 30 degrees / 0.25 seconds = 120 degrees/second
+            if (swordAttackAnimation > 30) {
+                // Start returning to original position
+                swordAttackAnimation = 30;
+                isAttacking = false;
+            }
+        } else if (swordAttackAnimation > 0) {
+            // Return sword to original position
+            swordAttackAnimation -= 120 * deltaTime;
+            if (swordAttackAnimation < 0) {
+                swordAttackAnimation = 0;
+            }
         }
     }
 
     @Override
     public void render(SpriteBatch batch) {
+        // Render player
         if (texture != null) {
             batch.draw(texture, position.x, position.y, width, height);
         }
 
-        // Render weapon if attacking
-        if (isAttacking && currentWeapon != null && currentWeapon.getTexture() != null) {
-            // Render weapon in front of player
-            batch.draw(currentWeapon.getTexture(),
-                      position.x + width/2,
-                      position.y + height/2,
-                      currentWeapon.getWidth(),
-                      currentWeapon.getHeight());
+        // Render weapon if available - SIMPLIFIED VERSION
+        if (currentWeapon != null && currentWeapon.getTexture() != null) {
+            // Position sword in the center of the screen for maximum visibility
+            float swordX = Gdx.graphics.getWidth() / 2 - currentWeapon.getWidth() / 2;
+            float swordY = Gdx.graphics.getHeight() / 2 - currentWeapon.getHeight() / 2;
+
+            // Draw the sword without rotation - super simplified to ensure visibility
+            batch.draw(
+                currentWeapon.getTexture(),
+                swordX, swordY,
+                currentWeapon.getWidth() * 2, // Make it twice as large
+                currentWeapon.getHeight() * 2  // Make it twice as large
+            );
         }
     }
 
@@ -74,8 +109,12 @@ public class Player extends Character {
     public void attack() {
         if (attackCooldown <= 0 && currentWeapon != null) {
             isAttacking = true;
+            swordAttackAnimation = 0; // Reset animation to start from the beginning
             attackCooldown = 0.5f; // Half second cooldown
-            // Attack logic will be implemented in weapon classes
+
+            // Call the weapon's attack method
+            Vector2 target = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
+            currentWeapon.attack(this, target);
         }
     }
 

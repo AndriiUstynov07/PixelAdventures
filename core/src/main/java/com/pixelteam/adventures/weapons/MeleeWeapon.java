@@ -15,7 +15,30 @@ public class MeleeWeapon extends Weapon {
         this.attackSpeed = attackSpeed;
         this.level = 1;
         this.type = WeaponType.MELEE;
-        this.texture = new Texture(Gdx.files.internal(texturePath));
+
+        // Try to load the texture from the specified path
+        try {
+            if (Gdx.files.internal(texturePath).exists()) {
+                this.texture = new Texture(Gdx.files.internal(texturePath));
+            } else {
+                // Try alternative paths
+                String[] alternativePaths = {
+                    "sword.png",
+                    "images/weapons/sword.png",
+                    "lwjgl3/build/resources/main/images/weapons/sword.png",
+                    "assets/images/weapons/sword.png"
+                };
+
+                for (String path : alternativePaths) {
+                    if (Gdx.files.internal(path).exists()) {
+                        this.texture = new Texture(Gdx.files.internal(path));
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Silently handle the exception
+        }
         this.width = 64;
         this.height = 64;
         this.range = 100;
@@ -26,7 +49,6 @@ public class MeleeWeapon extends Weapon {
     public void attack(Character user, Vector2 target) {
         // Implement melee attack logic
         // For now, just a placeholder
-        System.out.println(name + " attacks with " + damage + " damage!");
     }
 
     @Override

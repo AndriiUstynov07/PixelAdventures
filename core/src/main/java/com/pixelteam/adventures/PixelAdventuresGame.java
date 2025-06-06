@@ -32,7 +32,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.setTexture(playerTexture);
 
         // Створення меча
-        sword = new MeleeWeapon("Sword", 10, 1.0f, "images/weapons/sword.png");
+        // Try different paths to ensure the sword texture is loaded
+        if (Gdx.files.internal("images/weapons/sword.png").exists()) {
+            sword = new MeleeWeapon("Sword", 10, 1.0f, "images/weapons/sword.png");
+        } else if (Gdx.files.internal("sword.png").exists()) {
+            sword = new MeleeWeapon("Sword", 10, 1.0f, "sword.png");
+        } else {
+            sword = new MeleeWeapon("Sword", 10, 1.0f, "images/weapons/sword.png");
+        }
 
         // Екіпіровка меча гравцем
         player.equipWeapon(sword);

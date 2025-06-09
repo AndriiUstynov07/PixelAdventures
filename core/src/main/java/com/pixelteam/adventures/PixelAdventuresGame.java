@@ -56,8 +56,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.addBoss(boss);
 
         // Завантаження текстури боса
-        if (Gdx.files.internal("images/monsters/big_boss.PNG").exists()) {
-            Texture bossTexture = new Texture(Gdx.files.internal("images/monsters/big_boss.PNG"));
+        if (Gdx.files.internal("images/monsters/big_boss_1.PNG").exists()) {
+            Texture bossTexture = new Texture(Gdx.files.internal("images/monsters/big_boss_1.PNG"));
             boss.setTexture(bossTexture);
         } else if (Gdx.files.internal("images/enemies/dragon_boss.png").exists()) {
             Texture bossTexture = new Texture(Gdx.files.internal("images/enemies/dragon_boss.png"));

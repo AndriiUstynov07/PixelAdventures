@@ -20,6 +20,7 @@ public class Player extends Character {
     private boolean isAttacking;
     private float swordRotation;
     private float swordAttackAnimation;
+    private boolean facingLeft; // Напрямок, в який дивиться гравець
 
     public Player(float x, float y) {
         position = new Vector2(x, y);
@@ -38,8 +39,9 @@ public class Player extends Character {
         controller = new PlayerController(this);
         attackCooldown = 0;
         isAttacking = false;
-        swordRotation = -5; // 15 degrees to the right
+        swordRotation = -5; // Default rotation
         swordAttackAnimation = 0;
+        facingLeft = false; // Спочатку дивиться вправо
     }
 
     @Override
@@ -64,15 +66,15 @@ public class Player extends Character {
         // Update sword attack animation
         if (isAttacking) {
             // Animate sword swing down by 30 degrees over 0.25 seconds
-            swordAttackAnimation += 240 * deltaTime; // 30 degrees / 0.25 seconds = 120 degrees/second
-            if (swordAttackAnimation > 60) {
+            swordAttackAnimation += 1600 * deltaTime; // 30 degrees / 0.25 seconds = 120 degrees/second
+            if (swordAttackAnimation > 150) {
                 // Start returning to original position
-                swordAttackAnimation = 60;
+                swordAttackAnimation = 150;
                 isAttacking = false;
             }
         } else if (swordAttackAnimation > 0) {
             // Return sword to original position
-            swordAttackAnimation -= 240 * deltaTime;
+            swordAttackAnimation -= 1600 * deltaTime;
             if (swordAttackAnimation < 0) {
                 swordAttackAnimation = 0;
             }
@@ -88,16 +90,25 @@ public class Player extends Character {
 
         // Render weapon if available - Position relative to player
         if (currentWeapon != null && currentWeapon.getTexture() != null) {
-            // Calculate sword position relative to player
-            float offsetX = 23; // Offset to the right of the player
-            float offsetY = 1; // Offset slightly up from player center
+            float offsetX, offsetY;
+            float totalRotation;
+
+            if (facingLeft) {
+                // Меч з лівої сторони гравця
+                offsetX = -23; // Offset to the left of the player
+                offsetY = -1; // 45 пікселів нижче (1 - 45 = -44)
+                // Повертаємо меч для лівого напрямку
+                totalRotation = 5 + swordAttackAnimation; // Протилежний напрямок для лівої сторони
+            } else {
+                // Меч з правої сторони гравця (як було раніше)
+                offsetX = 23; // Offset to the right of the player
+                offsetY = -1; // Offset slightly up from player center
+                totalRotation = swordRotation - swordAttackAnimation;
+            }
 
             // Position sword relative to player position
             float swordX = position.x + width/2 + offsetX - currentWeapon.getWidth()/2;
             float swordY = position.y + height/2 + offsetY - currentWeapon.getHeight()/2;
-
-            // Calculate rotation angle (base rotation + attack animation)
-            float totalRotation = swordRotation - swordAttackAnimation;
 
             // Draw the sword with rotation around its center
             batch.draw(
@@ -135,6 +146,14 @@ public class Player extends Character {
     @Override
     public void move(Vector2 direction) {
         velocity.set(direction).scl(speed);
+
+        // Визначаємо напрямок руху для оновлення напрямку меча
+        if (direction.x < 0) {
+            facingLeft = true;
+        } else if (direction.x > 0) {
+            facingLeft = false;
+        }
+        // Якщо direction.x == 0, залишаємо попередній напрямок
     }
 
     @Override
@@ -173,5 +192,13 @@ public class Player extends Character {
 
     public void setAttacking(boolean attacking) {
         this.isAttacking = attacking;
+    }
+
+    public boolean isFacingLeft() {
+        return facingLeft;
+    }
+
+    public void setFacingLeft(boolean facingLeft) {
+        this.facingLeft = facingLeft;
     }
 }

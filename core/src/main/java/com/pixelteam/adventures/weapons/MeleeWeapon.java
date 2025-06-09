@@ -8,6 +8,9 @@ import com.pixelteam.adventures.entities.Character;
 public class MeleeWeapon extends Weapon {
     private float range;
     private float swingAngle;
+    private boolean attacking;
+    private float attackRotation;
+    private float attackTimer;
 
     public MeleeWeapon(String name, int damage, float attackSpeed, String texturePath) {
         this.name = name;
@@ -15,6 +18,9 @@ public class MeleeWeapon extends Weapon {
         this.attackSpeed = attackSpeed;
         this.level = 1;
         this.type = WeaponType.MELEE;
+        this.attacking = false;
+        this.attackRotation = 0f;
+        this.attackTimer = 0f;
 
         // Try to load the texture from the specified path
         try {
@@ -77,5 +83,54 @@ public class MeleeWeapon extends Weapon {
         if (texture != null) {
             texture.dispose();
         }
+    }
+
+    /**
+     * Updates the weapon state
+     * @param deltaTime Time since last update
+     */
+    public void update(float deltaTime) {
+        if (attacking) {
+            // Update attack animation
+            attackTimer += deltaTime;
+
+            // Calculate rotation based on attack progress
+            float attackDuration = 0.3f; // 300ms for full attack
+            float progress = Math.min(attackTimer / attackDuration, 1.0f);
+
+            // Swing from -30 to 90 degrees during attack
+            attackRotation = -30f + progress * 120f;
+
+            // End attack after duration
+            if (attackTimer >= attackDuration) {
+                attacking = false;
+                attackTimer = 0f;
+                attackRotation = 0f;
+            }
+        }
+    }
+
+    /**
+     * Starts a weapon attack
+     */
+    public void startAttack() {
+        attacking = true;
+        attackTimer = 0f;
+    }
+
+    /**
+     * Checks if weapon is currently attacking
+     * @return true if attacking, false otherwise
+     */
+    public boolean isAttacking() {
+        return attacking;
+    }
+
+    /**
+     * Gets the current attack rotation angle
+     * @return rotation angle in degrees
+     */
+    public float getAttackRotation() {
+        return attackRotation;
     }
 }

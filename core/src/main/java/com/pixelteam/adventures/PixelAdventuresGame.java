@@ -70,6 +70,19 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             boss.setTexture(playerTexture);
         }
 
+        // Завантаження зброї боса
+        if (Gdx.files.internal("images/weapons/boss1weapon.png").exists()) {
+            MeleeWeapon bossWeapon = new MeleeWeapon("Boss Weapon", 30, 1.0f, "images/weapons/boss1weapon.png");
+            boss.equipWeapon(bossWeapon);
+        } else if (Gdx.files.internal("boss1weapon.png").exists()) {
+            MeleeWeapon bossWeapon = new MeleeWeapon("Boss Weapon", 30, 1.0f, "boss1weapon.png");
+            boss.equipWeapon(bossWeapon);
+        } else {
+            // Використовуємо звичайний меч як заглушку
+            MeleeWeapon bossWeapon = new MeleeWeapon("Boss Weapon", 30, 1.0f, "images/weapons/sword.png");
+            boss.equipWeapon(bossWeapon);
+        }
+
         // Pixel perfect налаштування
         Gdx.graphics.setVSync(true);
 
@@ -141,6 +154,9 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (backgroundTexture != null) backgroundTexture.dispose();
         if (player != null && player.getTexture() != null) player.getTexture().dispose();
         if (sword != null) sword.dispose();
-        if (boss != null && boss.getTexture() != null) boss.getTexture().dispose();
+        if (boss != null) {
+            if (boss.getTexture() != null) boss.getTexture().dispose();
+            if (boss.getWeapon() != null) boss.getWeapon().dispose();
+        }
     }
 }

@@ -1,8 +1,6 @@
 package com.pixelteam.adventures.entities.player;
 
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -10,6 +8,8 @@ import com.pixelteam.adventures.entities.Character;
 import com.pixelteam.adventures.items.Armor;
 import com.pixelteam.adventures.utils.Stats;
 import com.pixelteam.adventures.weapons.Weapon;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Player extends Character {
     private Inventory inventory;
@@ -20,158 +20,202 @@ public class Player extends Character {
     private boolean isAttacking;
     private float swordRotation;
     private float swordAttackAnimation;
-    private boolean facingLeft; // Напрямок, в який дивиться гравець
+    private boolean facingLeft;
+
+    // Межі ігрового поля (кімнати та коридори)
+    private List<Rectangle> playableAreas;
 
     public Player(float x, float y) {
-        position = new Vector2(x, y);
-        velocity = new Vector2(0, 0);
-        width = 64;
-        height = 64;
-        health = 100;
-        maxHealth = 100;
-        speed = 200;
-        alive = true;
-        active = true;
-        money = 0;
-        experience = 0;
-        stats = new Stats();
-        inventory = new Inventory(20); // Inventory with 20 slots
-        controller = new PlayerController(this);
-        attackCooldown = 0;
-        isAttacking = false;
-        swordRotation = -5; // Default rotation
-        swordAttackAnimation = 0;
-        facingLeft = false; // Спочатку дивиться вправо
+        this.position = new Vector2(x, y);
+        this.velocity = new Vector2(0.0F, 0.0F);
+        this.width = 64.0F;
+        this.height = 64.0F;
+        this.health = 100;
+        this.maxHealth = 100;
+        this.speed = 200.0F;
+        this.alive = true;
+        this.active = true;
+        this.money = 0;
+        this.experience = 0;
+        this.stats = new Stats();
+        this.inventory = new Inventory(20);
+        this.controller = new PlayerController(this);
+        this.attackCooldown = 0.0F;
+        this.isAttacking = false;
+        this.swordRotation = -5.0F;
+        this.swordAttackAnimation = 0.0F;
+        this.facingLeft = false;
+
+        // Ініціалізація ігрових зон
+        initializePlayableAreas();
     }
 
-    @Override
+    private void initializePlayableAreas() {
+        playableAreas = new ArrayList<>();
+
+        // Розміри екрану: 1280x720
+        // Створюємо одну велику зону, що включає всі кімнати та коридори
+
+        // Ліва кімната (коричнева підлога)
+        playableAreas.add(new Rectangle(
+            110,   // x - відступ від лівого краю
+            260,  // y - відступ від низу
+            120,  // width - ширина коричневої зони
+            165   // height - висота коричневої зони
+        ));
+
+        // Лівий коридор (горизонтальний)
+        playableAreas.add(new Rectangle(
+            155,  // x - з'єднується з лівою кімнатою
+            341,  // y - центр по вертикалі
+            315,  // width - до центральної кімнати
+            24    // height - висота коридору
+        ));
+
+        // Центральна кімната (коричнева підлога)
+        playableAreas.add(new Rectangle(
+            470,  // x - центральна позиція
+            260,  // y - відступ від низу
+            120,  // width - ширина центральної кімнати
+            165   // height - висота коричневої зони
+        ));
+
+        // Правий коридор (горизонтальний)
+        playableAreas.add(new Rectangle(
+            590,  // x - з'єднується з центральною кімнатою
+            341,  // y - центр по вертикалі
+            180,  // width - до правої кімнати
+            24    // height - висота коридору
+        ));
+
+        // Права кімната (коричнева підлога)
+        playableAreas.add(new Rectangle(
+            835,  // x - права позиція
+            260,  // y - відступ від низу
+            310,  // width - ширина коричневої зони
+            165   // height - висота коричневої зони
+        ));
+    }
+
+    private boolean isPositionValid(float x, float y) {
+        Rectangle playerBounds = new Rectangle(x, y, this.width, this.height);
+
+        // Перевіряємо, чи гравець хоча б частково знаходиться в одній з дозволених зон
+        for (Rectangle area : playableAreas) {
+            if (area.overlaps(playerBounds)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void update(float deltaTime) {
-        controller.update();
+        this.controller.update();
 
-        // Update position based on velocity
-        position.add(velocity.x * deltaTime, velocity.y * deltaTime);
+        // Зберігаємо попередню позицію
+        float previousX = this.position.x;
+        float previousY = this.position.y;
 
-        // Apply map boundaries
-        // Prevent player from moving outside the screen
-        if (position.x < 0) position.x = 0;
-        if (position.y < 0) position.y = 0;
-        if (position.x > Gdx.graphics.getWidth() - width) position.x = Gdx.graphics.getWidth() - width;
-        if (position.y > Gdx.graphics.getHeight() - height) position.y = Gdx.graphics.getHeight() - height;
+        // Оновлюємо позицію
+        this.position.add(this.velocity.x * deltaTime, this.velocity.y * deltaTime);
 
-        // Update attack cooldown
-        if (attackCooldown > 0) {
-            attackCooldown -= deltaTime;
+        // Перевіряємо, чи нова позиція валідна
+        if (!isPositionValid(this.position.x, this.position.y)) {
+            // Якщо нова позиція невалідна, повертаємося до попередньої
+            this.position.x = previousX;
+            this.position.y = previousY;
+
+            // Спробуємо рухатися тільки по X
+            this.position.x += this.velocity.x * deltaTime;
+            if (!isPositionValid(this.position.x, this.position.y)) {
+                this.position.x = previousX;
+
+                // Спробуємо рухатися тільки по Y
+                this.position.y += this.velocity.y * deltaTime;
+                if (!isPositionValid(this.position.x, this.position.y)) {
+                    this.position.y = previousY;
+                }
+            }
         }
 
-        // Update sword attack animation
-        if (isAttacking) {
-            // Animate sword swing down by 30 degrees over 0.25 seconds
-            swordAttackAnimation += 1600 * deltaTime; // 30 degrees / 0.25 seconds = 120 degrees/second
-            if (swordAttackAnimation > 150) {
-                // Start returning to original position
-                swordAttackAnimation = 150;
-                isAttacking = false;
+        if (this.attackCooldown > 0.0F) {
+            this.attackCooldown -= deltaTime;
+        }
+
+        if (this.isAttacking) {
+            this.swordAttackAnimation += 1600.0F * deltaTime;
+            if (this.swordAttackAnimation > 150.0F) {
+                this.swordAttackAnimation = 150.0F;
+                this.isAttacking = false;
             }
-        } else if (swordAttackAnimation > 0) {
-            // Return sword to original position
-            swordAttackAnimation -= 1600 * deltaTime;
-            if (swordAttackAnimation < 0) {
-                swordAttackAnimation = 0;
+        } else if (this.swordAttackAnimation > 0.0F) {
+            this.swordAttackAnimation -= 1600.0F * deltaTime;
+            if (this.swordAttackAnimation < 0.0F) {
+                this.swordAttackAnimation = 0.0F;
             }
         }
     }
 
-    @Override
     public void render(SpriteBatch batch) {
-        // Render player
-        if (texture != null) {
-            batch.draw(texture, position.x, position.y, width, height);
+        if (this.texture != null) {
+            batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
         }
 
-        // Render weapon if available - Position relative to player
-        if (currentWeapon != null && currentWeapon.getTexture() != null) {
-            float offsetX, offsetY;
+        if (this.currentWeapon != null && this.currentWeapon.getTexture() != null) {
+            float offsetX;
+            float offsetY;
             float totalRotation;
-
-            if (facingLeft) {
-                // Меч з лівої сторони гравця
-                offsetX = -23; // Offset to the left of the player
-                offsetY = -1; // 45 пікселів нижче (1 - 45 = -44)
-                // Повертаємо меч для лівого напрямку
-                totalRotation = 5 + swordAttackAnimation; // Протилежний напрямок для лівої сторони
+            if (this.facingLeft) {
+                offsetX = -23.0F;
+                offsetY = -1.0F;
+                totalRotation = 5.0F + this.swordAttackAnimation;
             } else {
-                // Меч з правої сторони гравця (як було раніше)
-                offsetX = 23; // Offset to the right of the player
-                offsetY = -1; // Offset slightly up from player center
-                totalRotation = swordRotation - swordAttackAnimation;
+                offsetX = 23.0F;
+                offsetY = -1.0F;
+                totalRotation = this.swordRotation - this.swordAttackAnimation;
             }
 
-            // Position sword relative to player position
-            float swordX = position.x + width/2 + offsetX - currentWeapon.getWidth()/2;
-            float swordY = position.y + height/2 + offsetY - currentWeapon.getHeight()/2;
-
-            // Draw the sword with rotation around its center
-            batch.draw(
-                currentWeapon.getTexture(),
-                swordX, swordY, // Position
-                currentWeapon.getWidth()/2f, currentWeapon.getHeight()/2f, // Origin (center of sword)
-                currentWeapon.getWidth(), currentWeapon.getHeight(), // Size
-                1f, 1f, // Scale
-                totalRotation, // Rotation angle
-                0, 0, // Source position in texture
-                currentWeapon.getTexture().getWidth(), currentWeapon.getTexture().getHeight(), // Source size
-                false, false // Flip flags
-            );
+            float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
+            float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
+            batch.draw(this.currentWeapon.getTexture(), swordX, swordY, this.currentWeapon.getWidth() / 2.0F, this.currentWeapon.getHeight() / 2.0F, this.currentWeapon.getWidth(), this.currentWeapon.getHeight(), 1.0F, 1.0F, totalRotation, 0, 0, this.currentWeapon.getTexture().getWidth(), this.currentWeapon.getTexture().getHeight(), false, false);
         }
     }
 
-    @Override
     public Rectangle getBounds() {
-        return new Rectangle(position.x, position.y, width, height);
+        return new Rectangle(this.position.x, this.position.y, this.width, this.height);
     }
 
-    @Override
     public void attack() {
-        if (attackCooldown <= 0 && currentWeapon != null) {
-            isAttacking = true;
-            swordAttackAnimation = 0; // Reset animation to start from the beginning
-            attackCooldown = 0.5f; // Half second cooldown
-
-            // Call the weapon's attack method
-            Vector2 target = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
-            currentWeapon.attack(this, target);
+        if (this.attackCooldown <= 0.0F && this.currentWeapon != null) {
+            this.isAttacking = true;
+            this.swordAttackAnimation = 0.0F;
+            this.attackCooldown = 0.5F;
+            Vector2 target = new Vector2((float)Gdx.input.getX(), (float)(Gdx.graphics.getHeight() - Gdx.input.getY()));
+            this.currentWeapon.attack(this, target);
         }
     }
 
-    @Override
     public void move(Vector2 direction) {
-        velocity.set(direction).scl(speed);
-
-        // Визначаємо напрямок руху для оновлення напрямку меча
-        if (direction.x < 0) {
-            facingLeft = true;
-        } else if (direction.x > 0) {
-            facingLeft = false;
+        this.velocity.set(direction).scl(this.speed);
+        if (direction.x < 0.0F) {
+            this.facingLeft = true;
+        } else if (direction.x > 0.0F) {
+            this.facingLeft = false;
         }
-        // Якщо direction.x == 0, залишаємо попередній напрямок
     }
 
-    @Override
     public void takeDamage(int damage) {
-        health -= damage;
-        if (health <= 0) {
-            die();
+        this.health -= damage;
+        if (this.health <= 0) {
+            this.die();
         }
     }
 
-    @Override
     public void die() {
-        alive = false;
-        // Додаткова логіка смерті гравця
+        this.alive = false;
     }
 
     public void levelUp() {
-        // Логіка підвищення рівня
     }
 
     public void equipWeapon(Weapon weapon) {
@@ -183,11 +227,11 @@ public class Player extends Character {
     }
 
     public PlayerController getController() {
-        return controller;
+        return this.controller;
     }
 
     public boolean isAttacking() {
-        return isAttacking;
+        return this.isAttacking;
     }
 
     public void setAttacking(boolean attacking) {
@@ -195,10 +239,20 @@ public class Player extends Character {
     }
 
     public boolean isFacingLeft() {
-        return facingLeft;
+        return this.facingLeft;
     }
 
     public void setFacingLeft(boolean facingLeft) {
         this.facingLeft = facingLeft;
+    }
+
+    // Метод для налаштування меж карти ззовні (якщо потрібно)
+    public void setPlayableAreas(List<Rectangle> areas) {
+        this.playableAreas = areas;
+    }
+
+    // Метод для отримання поточних меж (для налагодження)
+    public List<Rectangle> getPlayableAreas() {
+        return this.playableAreas;
     }
 }

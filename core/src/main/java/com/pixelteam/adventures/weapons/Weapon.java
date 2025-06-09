@@ -34,4 +34,8 @@ public abstract class Weapon {
     public Texture getTexture() {
         return texture;
     }
+
+    public int getDamage() {
+        return damage;
+    }
 }

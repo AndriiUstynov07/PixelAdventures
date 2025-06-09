@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.pixelteam.adventures.entities.player.Player;
+import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
 
 public class PixelAdventuresGame extends ApplicationAdapter {
@@ -15,6 +16,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Texture backgroundTexture;
     private Player player;
     private MeleeWeapon sword;
+    private DragonBoss boss;
     private float deltaTime;
 
     @Override
@@ -32,7 +34,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.setTexture(playerTexture);
 
         // Створення меча
-        // Try different paths to ensure the sword texture is loaded
         if (Gdx.files.internal("images/weapons/sword.png").exists()) {
             sword = new MeleeWeapon("Sword", 10, 1.0f, "images/weapons/sword.png");
         } else if (Gdx.files.internal("sword.png").exists()) {
@@ -43,6 +44,31 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Екіпіровка меча гравцем
         player.equipWeapon(sword);
+
+        // Створення боса в правій кімнаті
+        // Позиція в центрі правої кімнати
+        float bossX = 835f + (310f - 128f) / 2; // Центр правої кімнати мінус половина розміру боса
+        float bossY = 260f + (165f - 128f) / 2; // Центр правої кімнати мінус половина розміру боса
+        boss = new DragonBoss(bossX, bossY);
+        boss.setTarget(player);
+
+        // Add boss to player's list of bosses for collision detection
+        player.addBoss(boss);
+
+        // Завантаження текстури боса
+        if (Gdx.files.internal("images/monsters/big_boss.PNG").exists()) {
+            Texture bossTexture = new Texture(Gdx.files.internal("images/monsters/big_boss.PNG"));
+            boss.setTexture(bossTexture);
+        } else if (Gdx.files.internal("images/enemies/dragon_boss.png").exists()) {
+            Texture bossTexture = new Texture(Gdx.files.internal("images/enemies/dragon_boss.png"));
+            boss.setTexture(bossTexture);
+        } else if (Gdx.files.internal("images/enemies/boss.png").exists()) {
+            Texture bossTexture = new Texture(Gdx.files.internal("images/enemies/boss.png"));
+            boss.setTexture(bossTexture);
+        } else {
+            // Використовуємо текстуру гравця як заглушку для боса (збільшену)
+            boss.setTexture(playerTexture);
+        }
 
         // Pixel perfect налаштування
         Gdx.graphics.setVSync(true);
@@ -60,6 +86,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Оновлення гравця
         player.update(deltaTime);
 
+        // Оновлення боса
+        if (boss != null && boss.isAlive()) {
+            boss.update(deltaTime, player);
+
+            // Перевірка колізії між гравцем та босом
+            checkPlayerBossCollision();
+        }
+
         // Очищаємо екран
         ScreenUtils.clear(0, 0, 0, 1);
 
@@ -70,7 +104,35 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Рендеринг гравця
         player.render(batch);
 
+        // Рендеринг боса
+        if (boss != null && boss.isAlive()) {
+            boss.render(batch);
+        }
+
         batch.end();
+    }
+
+    private void checkPlayerBossCollision() {
+        if (player.getBounds().overlaps(boss.getBounds())) {
+            // Розрахунок вектора відштовхування
+            Vector2 playerCenter = new Vector2(
+                player.getPosition().x + player.getWidth() / 2,
+                player.getPosition().y + player.getHeight() / 2
+            );
+            Vector2 bossCenter = new Vector2(
+                boss.getPosition().x + boss.getWidth() / 2,
+                boss.getPosition().y + boss.getHeight() / 2
+            );
+
+            Vector2 pushDirection = playerCenter.sub(bossCenter).nor();
+
+            // Відштовхуємо гравця від боса
+            float pushDistance = 5.0f;
+            player.getPosition().add(pushDirection.scl(pushDistance));
+
+            // Додаткова перевірка меж після відштовхування
+            player.checkBounds();
+        }
     }
 
     @Override
@@ -79,5 +141,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (backgroundTexture != null) backgroundTexture.dispose();
         if (player != null && player.getTexture() != null) player.getTexture().dispose();
         if (sword != null) sword.dispose();
+        if (boss != null && boss.getTexture() != null) boss.getTexture().dispose();
     }
 }

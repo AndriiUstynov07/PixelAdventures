@@ -11,4 +11,8 @@ public abstract class Boss extends Enemy {
     public void changePhase() {
 
     }
+
+    public boolean isAlive() {
+        return this.alive;
+    }
 }

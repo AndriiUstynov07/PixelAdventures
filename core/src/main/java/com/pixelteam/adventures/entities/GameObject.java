@@ -16,11 +16,14 @@ public abstract class GameObject {
     public abstract void render(SpriteBatch batch);
     public abstract Rectangle getBounds();
 
-    public void setTexture(Texture texture) {
-        this.texture = texture;
-    }
+    // Getters and setters
+    public Vector2 getPosition() { return position; }
+    public void setPosition(Vector2 position) { this.position = position; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 
-    public Texture getTexture() {
-        return texture;
+    public void setTexture(Texture playerTexture) {
+        this.texture = playerTexture;
     }
+    public Texture getTexture() { return texture; }
 }

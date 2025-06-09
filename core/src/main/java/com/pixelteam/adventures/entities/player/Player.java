@@ -1,6 +1,8 @@
 package com.pixelteam.adventures.entities.player;
 
+import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -36,7 +38,7 @@ public class Player extends Character {
         controller = new PlayerController(this);
         attackCooldown = 0;
         isAttacking = false;
-        swordRotation = 15; // 15 degrees to the right
+        swordRotation = -15; // 15 degrees to the right
         swordAttackAnimation = 0;
     }
 
@@ -84,18 +86,30 @@ public class Player extends Character {
             batch.draw(texture, position.x, position.y, width, height);
         }
 
-        // Render weapon if available - SIMPLIFIED VERSION
+        // Render weapon if available - Position relative to player
         if (currentWeapon != null && currentWeapon.getTexture() != null) {
-            // Position sword in the center of the screen for maximum visibility
-            float swordX = Gdx.graphics.getWidth() / 2 - currentWeapon.getWidth() / 2;
-            float swordY = Gdx.graphics.getHeight() / 2 - currentWeapon.getHeight() / 2;
+            // Calculate sword position relative to player
+            float offsetX = 20; // Offset to the right of the player
+            float offsetY = 5; // Offset slightly up from player center
 
-            // Draw the sword without rotation - super simplified to ensure visibility
+            // Position sword relative to player position
+            float swordX = position.x + width/2 + offsetX - currentWeapon.getWidth()/2;
+            float swordY = position.y + height/2 + offsetY - currentWeapon.getHeight()/2;
+
+            // Calculate rotation angle (base rotation + attack animation)
+            float totalRotation = swordRotation - swordAttackAnimation;
+
+            // Draw the sword with rotation around its center
             batch.draw(
                 currentWeapon.getTexture(),
-                swordX, swordY,
-                currentWeapon.getWidth() * 2, // Make it twice as large
-                currentWeapon.getHeight() * 2  // Make it twice as large
+                swordX, swordY, // Position
+                currentWeapon.getWidth()/2f, currentWeapon.getHeight()/2f, // Origin (center of sword)
+                currentWeapon.getWidth(), currentWeapon.getHeight(), // Size
+                1f, 1f, // Scale
+                totalRotation, // Rotation angle
+                0, 0, // Source position in texture
+                currentWeapon.getTexture().getWidth(), currentWeapon.getTexture().getHeight(), // Source size
+                false, false // Flip flags
             );
         }
     }

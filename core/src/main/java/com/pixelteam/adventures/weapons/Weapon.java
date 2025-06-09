@@ -1,8 +1,10 @@
 package com.pixelteam.adventures.weapons;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.pixelteam.adventures.entities.Character;
+import com.pixelteam.adventures.entities.GameObject;
 
 public abstract class Weapon {
     protected String name;
@@ -17,9 +19,7 @@ public abstract class Weapon {
     public abstract void attack(Character user, Vector2 target);
     public abstract void upgrade();
 
-    public Texture getTexture() {
-        return texture;
-    }
+
 
     public float getWidth() {
         return width;
@@ -30,4 +30,8 @@ public abstract class Weapon {
     }
 
     public abstract void dispose();
+
+    public Texture getTexture() {
+        return texture;
+    }
 }

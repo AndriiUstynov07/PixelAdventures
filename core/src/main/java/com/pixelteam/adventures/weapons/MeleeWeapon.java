@@ -39,8 +39,14 @@ public class MeleeWeapon extends Weapon {
         } catch (Exception e) {
             // Silently handle the exception
         }
-        this.width = 64;
-        this.height = 64;
+
+        // Set dimensions based on loaded texture, or use defaults
+        if (this.texture != null) {
+
+            this.width = 42;
+            this.height = 64;
+        }
+
         this.range = 100;
         this.swingAngle = 90; // Degrees
     }

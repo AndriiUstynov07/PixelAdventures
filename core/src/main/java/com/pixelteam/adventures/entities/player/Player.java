@@ -38,7 +38,7 @@ public class Player extends Character {
         controller = new PlayerController(this);
         attackCooldown = 0;
         isAttacking = false;
-        swordRotation = -15; // 15 degrees to the right
+        swordRotation = -5; // 15 degrees to the right
         swordAttackAnimation = 0;
     }
 
@@ -64,15 +64,15 @@ public class Player extends Character {
         // Update sword attack animation
         if (isAttacking) {
             // Animate sword swing down by 30 degrees over 0.25 seconds
-            swordAttackAnimation += 120 * deltaTime; // 30 degrees / 0.25 seconds = 120 degrees/second
-            if (swordAttackAnimation > 30) {
+            swordAttackAnimation += 240 * deltaTime; // 30 degrees / 0.25 seconds = 120 degrees/second
+            if (swordAttackAnimation > 60) {
                 // Start returning to original position
-                swordAttackAnimation = 30;
+                swordAttackAnimation = 60;
                 isAttacking = false;
             }
         } else if (swordAttackAnimation > 0) {
             // Return sword to original position
-            swordAttackAnimation -= 120 * deltaTime;
+            swordAttackAnimation -= 240 * deltaTime;
             if (swordAttackAnimation < 0) {
                 swordAttackAnimation = 0;
             }
@@ -89,8 +89,8 @@ public class Player extends Character {
         // Render weapon if available - Position relative to player
         if (currentWeapon != null && currentWeapon.getTexture() != null) {
             // Calculate sword position relative to player
-            float offsetX = 20; // Offset to the right of the player
-            float offsetY = 5; // Offset slightly up from player center
+            float offsetX = 23; // Offset to the right of the player
+            float offsetY = 1; // Offset slightly up from player center
 
             // Position sword relative to player position
             float swordX = position.x + width/2 + offsetX - currentWeapon.getWidth()/2;

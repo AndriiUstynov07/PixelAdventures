@@ -340,9 +340,9 @@ public class DragonBoss extends Boss {
 
     private void renderHealthBar(SpriteBatch batch) {
         // Параметри смужки здоров'я
-        float barWidth = 100f;
-        float barHeight = 8f;
-        float barOffsetY = height + 10f; // Відстань над босом
+        float barWidth = 70f; // Ширина смужки
+        float barHeight = 8f; // Висота смужки
+        float barOffsetY = height;
 
         // Позиція смужки (по центру над босом)
         float barX = position.x + (width - barWidth) / 2f;

@@ -3,10 +3,13 @@ package com.pixelteam.adventures;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.entities.enemies.MiniBoss;
@@ -20,6 +23,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private DragonBoss boss;
     private MiniBoss miniBoss;
     private float deltaTime;
+
+    // Camera system
+    private OrthographicCamera camera;
+    private Viewport viewport;
+    private float worldWidth;
+    private float worldHeight;
 
     @Override
     public void create() {
@@ -128,6 +137,24 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Вимкнути згладжування для pixel art
         Gdx.gl.glTexParameteri(GL20.GL_TEXTURE_2D, GL20.GL_TEXTURE_MIN_FILTER, GL20.GL_NEAREST);
         Gdx.gl.glTexParameteri(GL20.GL_TEXTURE_2D, GL20.GL_TEXTURE_MAG_FILTER, GL20.GL_NEAREST);
+
+        // Ініціалізація камери та viewport
+        worldWidth = 1280f;  // Ширина карти
+        worldHeight = 720f;  // Висота карти
+
+        float viewportWidth = worldWidth * 0.412f;
+        float viewportHeight = worldHeight * 0.412f;
+
+        camera = new OrthographicCamera();
+        viewport = new FitViewport(viewportWidth, viewportHeight, camera);
+        viewport.apply();
+
+        // Встановлюємо початкову позицію камери на гравця
+        camera.position.set(
+            player.getPosition().x + player.getWidth() / 2,
+            player.getPosition().y + player.getHeight() / 2,
+            0
+        );
     }
 
     @Override
@@ -161,12 +188,27 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         }
 
+        // Оновлюємо позицію камери, щоб вона слідувала за гравцем
+        if (player.isAlive()) {
+            camera.position.set(
+                player.getPosition().x + player.getWidth() / 2,
+                player.getPosition().y + player.getHeight() / 2,
+                0
+            );
+        }
+
+        // Оновлюємо камеру
+        camera.update();
+
         // Очищаємо екран
         ScreenUtils.clear(0, 0, 0, 1);
 
+        // Встановлюємо проекцію камери для SpriteBatch
+        batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        // Малюємо фонове зображення на весь екран
-        batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        // Малюємо фонове зображення в оригінальному розмірі
+        batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
 
         // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
         player.render(batch);
@@ -249,6 +291,13 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             // Додаткова перевірка меж після відштовхування
             player.checkBounds();
         }
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        // Оновлюємо viewport при зміні розміру вікна
+        viewport.update(width, height);
+        camera.update();
     }
 
     @Override

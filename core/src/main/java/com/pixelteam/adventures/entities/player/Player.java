@@ -381,10 +381,13 @@ public class Player extends Character {
 
     public void renderHealthBar(SpriteBatch batch) {
         // Параметри смужки здоров'я
-        float barWidth = 200f; // Ширина смужки
-        float barHeight = 20f; // Висота смужки
-        float barX = 20f; // Відступ від лівого краю
-        float barY = Gdx.graphics.getHeight() - barHeight - 20f; // Відступ від верхнього краю
+        float barWidth = 70f; // Ширина смужки
+        float barHeight = 8f; // Висота смужки
+        float barOffsetY = height;
+
+        // Позиція смужки
+        float barX = position.x + (width - barWidth) / 2f;
+        float barY = position.y + barOffsetY;
 
         // Відсоток здоров'я
         float healthPercent = (float) health / (float) maxHealth;

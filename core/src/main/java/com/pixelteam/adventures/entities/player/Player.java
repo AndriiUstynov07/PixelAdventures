@@ -245,38 +245,48 @@ public class Player extends Character {
         );
     }
     public void render(SpriteBatch batch) {
-        // Малюємо текстуру тільки якщо гравець живий
+        // Встановлюємо повну непрозорість для всіх наступних об'єктів у цьому batch
+        // Це забезпечить, що гравець і його зброя будуть повністю непрозорими.
+        batch.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        // Малюємо текстуру гравця, тільки якщо гравець живий
         if (this.texture != null && this.alive) {
-            // Якщо гравець отримав шкоду недавно, робимо його напівпрозорим для візуального ефекту
-            if (this.damageCooldown > 0.0f) {
-                batch.setColor(1f, 1f, 1f, 0.5f); // Напівпрозорий
+            if (this.facingLeft) {
+                batch.draw(this.texture, this.position.x + this.width, this.position.y, -this.width, this.height);
+            } else {
+                batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
             }
-
-            batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
-
-            // Повертаємо нормальний колір
-            batch.setColor(1f, 1f, 1f, 1f);
         }
 
-        // Малюємо зброю тільки якщо гравець живий
+        // Малюємо зброю, тільки якщо гравець живий і має зброю
         if (this.alive && this.currentWeapon != null && this.currentWeapon.getTexture() != null) {
             float offsetX;
             float offsetY;
             float totalRotation;
+
+            // Визначаємо зміщення та обертання зброї залежно від напрямку гравця
             if (this.facingLeft) {
                 offsetX = -23.0F;
                 offsetY = -1.0F;
-                totalRotation = 5.0F + this.swordAttackAnimation;
+                // Змінюємо swordRotation на 5.0F, якщо це початковий стан
+                // або використовуйте swordRotation, якщо він вже визначений і використовується
+                totalRotation = 5.0F + this.swordAttackAnimation; // Якщо swordRotation завжди 0
             } else {
                 offsetX = 23.0F;
                 offsetY = -1.0F;
+                // Якщо facingLeft == false, ми використовуємо swordRotation - swordAttackAnimation
                 totalRotation = this.swordRotation - this.swordAttackAnimation;
             }
 
             float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
             float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
+
+            // Малюємо текстуру зброї
             batch.draw(this.currentWeapon.getTexture(), swordX, swordY, this.currentWeapon.getWidth() / 2.0F, this.currentWeapon.getHeight() / 2.0F, this.currentWeapon.getWidth(), this.currentWeapon.getHeight(), 1.0F, 1.0F, totalRotation, 0, 0, this.currentWeapon.getTexture().getWidth(), this.currentWeapon.getTexture().getHeight(), false, false);
         }
+        // Дуже важливо: повертаємо колір batch на повну непрозорість (білий)
+        // після малювання гравця та зброї, щоб не впливати на інші об'єкти.
+        batch.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     public Rectangle getBounds() {

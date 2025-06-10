@@ -35,11 +35,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Створення меча
         if (Gdx.files.internal("images/weapons/sword.png").exists()) {
-            sword = new MeleeWeapon("Sword", 10, 1.0f, "images/weapons/sword.png");
+            sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
         } else if (Gdx.files.internal("sword.png").exists()) {
-            sword = new MeleeWeapon("Sword", 10, 1.0f, "sword.png");
+            sword = new MeleeWeapon("Sword", 100, 1.0f, "sword.png");
         } else {
-            sword = new MeleeWeapon("Sword", 10, 1.0f, "images/weapons/sword.png");
+            sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
         }
 
         // Екіпіровка меча гравцем
@@ -157,6 +157,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (boss != null) {
             if (boss.getTexture() != null) boss.getTexture().dispose();
             if (boss.getWeapon() != null) boss.getWeapon().dispose();
+            boss.dispose(); // Додаємо виклик dispose для боса
         }
     }
 }

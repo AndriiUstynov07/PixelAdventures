@@ -30,6 +30,7 @@ public class DragonBoss extends Boss {
     private boolean isAttacking; // Whether boss is currently attacking
     private float weaponAttackAnimation; // Animation progress for weapon attack
     private boolean weaponSwingDirection; // Direction of weapon swing (true = forward, false = backward)
+    private static Texture pixelTexture;
 
     // Implement the abstract method from GameObject
     @Override
@@ -338,8 +339,35 @@ public class DragonBoss extends Boss {
     }
 
     private void renderHealthBar(SpriteBatch batch) {
-        // Тут можна додати візуалізацію смужки здоров'я
-        // Поки що залишимо порожнім, оскільки потрібні додаткові текстури
+        // Параметри смужки здоров'я
+        float barWidth = 100f;
+        float barHeight = 8f;
+        float barOffsetY = height + 10f; // Відстань над босом
+
+        // Позиція смужки (по центру над босом)
+        float barX = position.x + (width - barWidth) / 2f;
+        float barY = position.y + barOffsetY;
+
+        // Відсоток здоров'я
+        float healthPercent = (float) health / (float) maxHealth;
+
+        // Кольори для смужки
+        float redBackground = 0.2f, greenBackground = 0.2f, blueBackground = 0.2f, alphaBackground = 0.8f;
+        float redHealth = 1.0f - healthPercent; // Червоний колір збільшується при зменшенні здоров'я
+        float greenHealth = healthPercent; // Зелений колір зменшується при зменшенні здоров'я
+        float blueHealth = 0.0f;
+        float alphaHealth = 1.0f;
+
+        // Малюємо фон смужки (темний прямокутник)
+        batch.setColor(redBackground, greenBackground, blueBackground, alphaBackground);
+        batch.draw(getPixelTexture(), barX - 2f, barY - 2f, barWidth + 4f, barHeight + 4f);
+
+        // Малюємо основну смужку здоров'я
+        batch.setColor(redHealth, greenHealth, blueHealth, alphaHealth);
+        batch.draw(getPixelTexture(), barX, barY, barWidth * healthPercent, barHeight);
+
+        // Повертаємо білий колір для нормального рендерингу інших об'єктів
+        batch.setColor(1f, 1f, 1f, 1f);
     }
 
     public void attack() {
@@ -411,6 +439,24 @@ public class DragonBoss extends Boss {
     public void die() {
         alive = false;
         dropLoot();
+    }
+    private Texture getPixelTexture() {
+        if (pixelTexture == null) {
+            // Створюємо 1x1 білу текстуру
+            com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+            pixmap.setColor(1, 1, 1, 1); // Білий колір
+            pixmap.fill();
+            pixelTexture = new Texture(pixmap);
+            pixmap.dispose();
+        }
+        return pixelTexture;
+    }
+
+    public void dispose() {
+        if (pixelTexture != null) {
+            pixelTexture.dispose();
+            pixelTexture = null;
+        }
     }
 
     public Rectangle getBounds() {

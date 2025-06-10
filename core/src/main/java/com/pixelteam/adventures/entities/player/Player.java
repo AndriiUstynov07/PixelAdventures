@@ -1,16 +1,19 @@
 package com.pixelteam.adventures.entities.player;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.pixelteam.adventures.entities.Character;
 import com.pixelteam.adventures.entities.enemies.Boss;
+import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.items.Armor;
 import com.pixelteam.adventures.utils.Stats;
 import com.pixelteam.adventures.weapons.Weapon;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class Player extends Character {
     private Inventory inventory;
@@ -22,6 +25,9 @@ public class Player extends Character {
     private float swordRotation;
     private float swordAttackAnimation;
     private boolean facingLeft;
+    private static Texture pixelTexture;
+    private float damageCooldown; // Кулдаун для запобігання багаторазовому отриманню шкоди
+    private static final float DAMAGE_COOLDOWN_TIME = 1.0f; // 1 секунда захисту після отримання шкоди
 
     // Межі ігрового поля (кімнати та коридори)
     private List<Rectangle> playableAreas;
@@ -34,8 +40,8 @@ public class Player extends Character {
         this.velocity = new Vector2(0.0F, 0.0F);
         this.width = 64.0F;
         this.height = 64.0F;
-        this.health = 100;
-        this.maxHealth = 100;
+        this.health = 300;
+        this.maxHealth = 300;
         this.speed = 200.0F;
         this.alive = true;
         this.active = true;
@@ -50,6 +56,7 @@ public class Player extends Character {
         this.swordAttackAnimation = 0.0F;
         this.facingLeft = false;
         this.bosses = new ArrayList<>();
+        this.damageCooldown = 0.0f; // Ініціалізуємо кулдаун
 
         // Ініціалізація ігрових зон
         initializePlayableAreas();
@@ -125,30 +132,43 @@ public class Player extends Character {
     }
 
     public void update(float deltaTime) {
+        // Оновлюємо кулдаун отримання шкоди
+        if (this.damageCooldown > 0.0f) {
+            this.damageCooldown -= deltaTime;
+        }
+
+        // Перевіряємо колізію зі зброєю боса (тільки якщо гравець живий)
+        if (this.alive) {
+            checkBossWeaponCollision();
+        }
+
+        // Решта існуючого коду update...
         this.controller.update();
 
         // Зберігаємо попередню позицію
         float previousX = this.position.x;
         float previousY = this.position.y;
 
-        // Оновлюємо позицію
-        this.position.add(this.velocity.x * deltaTime, this.velocity.y * deltaTime);
+        // Оновлюємо позицію тільки якщо гравець живий
+        if (this.alive) {
+            this.position.add(this.velocity.x * deltaTime, this.velocity.y * deltaTime);
 
-        // Перевіряємо, чи нова позиція валідна
-        if (!isPositionValid(this.position.x, this.position.y)) {
-            // Якщо нова позиція невалідна, повертаємося до попередньої
-            this.position.x = previousX;
-            this.position.y = previousY;
-
-            // Спробуємо рухатися тільки по X
-            this.position.x += this.velocity.x * deltaTime;
+            // Перевіряємо, чи нова позиція валідна
             if (!isPositionValid(this.position.x, this.position.y)) {
+                // Якщо нова позиція невалідна, повертаємося до попередньої
                 this.position.x = previousX;
+                this.position.y = previousY;
 
-                // Спробуємо рухатися тільки по Y
-                this.position.y += this.velocity.y * deltaTime;
+                // Спробуємо рухатися тільки по X
+                this.position.x += this.velocity.x * deltaTime;
                 if (!isPositionValid(this.position.x, this.position.y)) {
-                    this.position.y = previousY;
+                    this.position.x = previousX;
+
+                    // Спробуємо рухатися тільки по Y
+                    this.position.y += this.velocity.y * deltaTime;
+                    if (!isPositionValid(this.position.x, this.position.y)) {
+                        this.position.y = previousY;
+                    }
                 }
             }
         }
@@ -176,13 +196,70 @@ public class Player extends Character {
             }
         }
     }
+    private void checkBossWeaponCollision() {
+        // Перевіряємо колізію зі зброєю кожного боса
+        for (Boss boss : bosses) {
+            if (boss.isAlive() && boss.getWeapon() != null) {
+                // Отримуємо позицію зброї боса
+                Rectangle weaponBounds = getBossWeaponBounds(boss);
 
-    public void render(SpriteBatch batch) {
-        if (this.texture != null) {
-            batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
+                // Перевіряємо колізію з гравцем
+                if (weaponBounds != null && this.getBounds().overlaps(weaponBounds)) {
+                    // Завдаємо шкоду тільки якщо кулдаун закінчився
+                    if (this.damageCooldown <= 0.0f) {
+                        this.takeDamage(boss.getWeapon().getDamage());
+                        this.damageCooldown = DAMAGE_COOLDOWN_TIME;
+                    }
+                }
+            }
+        }
+    }
+
+    private Rectangle getBossWeaponBounds(Boss boss) {
+        if (boss.getWeapon() == null) return null;
+
+        // Розраховуємо позицію зброї боса (аналогічно до DragonBoss.renderWeapon)
+        float weaponWidth = boss.getWeapon().getWidth();
+        float weaponHeight = boss.getWeapon().getHeight();
+
+        float offsetX;
+        float offsetY;
+
+        if (boss.isFacingLeft()) {
+            offsetX = -54.0f;
+            offsetY = -15.0f;
+        } else {
+            offsetX = 62.0f;
+            offsetY = -15.0f;
         }
 
-        if (this.currentWeapon != null && this.currentWeapon.getTexture() != null) {
+        float weaponX = boss.getPosition().x + boss.getWidth() / 2.0f + offsetX - weaponWidth / 2.0f;
+        float weaponY = boss.getPosition().y + boss.getHeight() / 2.0f + offsetY - weaponHeight / 2.0f;
+
+        // Створюємо хітбокс зброї (трохи більший для кращого попадання)
+        return new Rectangle(
+            weaponX - 10,
+            weaponY - 10,
+            weaponWidth + 20,
+            weaponHeight + 20
+        );
+    }
+    public void render(SpriteBatch batch) {
+        // Малюємо текстуру тільки якщо гравець живий
+        if (this.texture != null && this.alive) {
+            // Якщо гравець отримав шкоду недавно, робимо його напівпрозорим для візуального ефекту
+            if (this.damageCooldown > 0.0f) {
+                batch.setColor(1f, 1f, 1f, 0.5f); // Напівпрозорий
+            }
+
+            batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
+
+            // Повертаємо нормальний колір
+            batch.setColor(1f, 1f, 1f, 1f);
+        }
+
+        // Малюємо зброю тільки якщо гравець живий
+        if (this.alive && this.currentWeapon != null && this.currentWeapon.getTexture() != null) {
             float offsetX;
             float offsetY;
             float totalRotation;
@@ -264,14 +341,61 @@ public class Player extends Character {
     }
 
     public void takeDamage(int damage) {
+        if (!this.alive) return; // Не отримуємо шкоди якщо вже мертві
+
         this.health -= damage;
+        System.out.println("Player took " + damage + " damage. Health: " + this.health + "/" + this.maxHealth);
+
         if (this.health <= 0) {
+            this.health = 0; // Не даємо здоров'ю стати негативним
             this.die();
         }
     }
 
     public void die() {
         this.alive = false;
+        this.velocity.set(0, 0); // Зупиняємо рух
+        System.out.println("Player has died!");
+    }
+    private Texture getPixelTexture() {
+        if (pixelTexture == null) {
+            // Створюємо 1x1 білу текстуру
+            com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+            pixmap.setColor(1, 1, 1, 1); // Білий колір
+            pixmap.fill();
+            pixelTexture = new Texture(pixmap);
+            pixmap.dispose();
+        }
+        return pixelTexture;
+    }
+
+    public void renderHealthBar(SpriteBatch batch) {
+        // Параметри смужки здоров'я
+        float barWidth = 200f; // Ширина смужки
+        float barHeight = 20f; // Висота смужки
+        float barX = 20f; // Відступ від лівого краю
+        float barY = Gdx.graphics.getHeight() - barHeight - 20f; // Відступ від верхнього краю
+
+        // Відсоток здоров'я
+        float healthPercent = (float) health / (float) maxHealth;
+
+        // Малюємо фон смужки (темно-сірий)
+        batch.setColor(0.2f, 0.2f, 0.2f, 0.8f);
+        batch.draw(getPixelTexture(), barX - 2f, barY - 2f, barWidth + 4f, barHeight + 4f);
+
+        // Малюємо смужку здоров'я (червоний колір)
+        batch.setColor(0.8f, 0.1f, 0.1f, 1.0f); // Темно-червоний колір
+        batch.draw(getPixelTexture(), barX, barY, barWidth * healthPercent, barHeight);
+
+        // Повертаємо білий колір для нормального рендерингу інших об'єктів
+        batch.setColor(1f, 1f, 1f, 1f);
+    }
+
+    public void dispose() {
+        if (pixelTexture != null) {
+            pixelTexture.dispose();
+            pixelTexture = null;
+        }
     }
 
     public void levelUp() {
@@ -366,5 +490,9 @@ public class Player extends Character {
 
     public float getHeight() {
         return this.height;
+    }
+
+    public boolean isAlive() {
+        return alive;
     }
 }

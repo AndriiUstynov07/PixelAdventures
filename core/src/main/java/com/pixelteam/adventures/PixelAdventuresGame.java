@@ -96,14 +96,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Оновлення deltaTime
         deltaTime = Gdx.graphics.getDeltaTime();
 
-        // Оновлення гравця
+        // Оновлення гравця (навіть якщо мертвий, для правильної обробки анімацій)
         player.update(deltaTime);
 
-        // Оновлення боса
-        if (boss != null && boss.isAlive()) {
+        // Оновлення боса тільки якщо гравець живий
+        if (boss != null && boss.isAlive() && player.isAlive()) {
             boss.update(deltaTime, player);
 
-            // Перевірка колізії між гравцем та босом
+            // Перевірка колізії між гравцем та босом (тільки якщо гравець живий)
             checkPlayerBossCollision();
         }
 
@@ -114,7 +114,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Малюємо фонове зображення на весь екран
         batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        // Рендеринг гравця
+        // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
         player.render(batch);
 
         // Рендеринг боса
@@ -122,10 +122,27 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             boss.render(batch);
         }
 
+        // Рендеринг смужки здоров'я гравця завжди (навіть якщо мертвий, щоб показати 0 HP)
+        player.renderHealthBar(batch);
+
+        // Якщо гравець мертвий, можна показати повідомлення "Game Over"
+        if (!player.isAlive()) {
+            renderGameOver(batch);
+        }
+
         batch.end();
+    }
+    // Додайте цей метод до основного класу гри (опціонально)
+    private void renderGameOver(SpriteBatch batch) {
+        // Тут можна додати текст "Game Over" або інший UI елемент
+        // Поки що просто залишимо порожнім, оскільки для тексту потрібен BitmapFont
+        // System.out.println("Game Over!"); // Для налагодження
     }
 
     private void checkPlayerBossCollision() {
+        // Перевіряємо колізію тільки якщо обидва живі
+        if (!player.isAlive() || !boss.isAlive()) return;
+
         if (player.getBounds().overlaps(boss.getBounds())) {
             // Розрахунок вектора відштовхування
             Vector2 playerCenter = new Vector2(
@@ -152,12 +169,15 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     public void dispose() {
         batch.dispose();
         if (backgroundTexture != null) backgroundTexture.dispose();
-        if (player != null && player.getTexture() != null) player.getTexture().dispose();
+        if (player != null) {
+            if (player.getTexture() != null) player.getTexture().dispose();
+            player.dispose(); // Додаємо виклик dispose для гравця
+        }
         if (sword != null) sword.dispose();
         if (boss != null) {
             if (boss.getTexture() != null) boss.getTexture().dispose();
             if (boss.getWeapon() != null) boss.getWeapon().dispose();
-            boss.dispose(); // Додаємо виклик dispose для боса
+            boss.dispose(); // Виклик dispose для боса
         }
     }
 }

@@ -375,9 +375,6 @@ public class DragonBoss extends Boss {
 
         // Простата атака - завдаємо шкоду якщо гравець поблизу
         float distanceToPlayer = position.dst(target.getPosition());
-        if (distanceToPlayer <= ATTACK_RANGE) {
-            target.takeDamage(25); // Босс завдає багато шкоди
-        }
 
         // Також запускаємо атаку зброї
         if (weapon != null) {

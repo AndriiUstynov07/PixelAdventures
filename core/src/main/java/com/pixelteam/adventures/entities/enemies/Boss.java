@@ -1,5 +1,7 @@
 package com.pixelteam.adventures.entities.enemies;
 
+import com.pixelteam.adventures.weapons.Weapon;
+
 public abstract class Boss extends Enemy {
     //protected List<BossAbility> abilities;
     protected int phase;
@@ -14,5 +16,22 @@ public abstract class Boss extends Enemy {
 
     public boolean isAlive() {
         return this.alive;
+    }
+
+    public Weapon getWeapon() {
+        return currentWeapon;
+    }
+
+    public boolean isFacingLeft() {
+
+        return false;
+    }
+
+    public float getHeight() {
+        return 0;
+    }
+
+    public float getWidth() {
+        return 0;
     }
 }

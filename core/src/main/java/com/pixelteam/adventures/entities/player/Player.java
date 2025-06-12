@@ -96,7 +96,7 @@ public class Player extends Character {
         playableAreas.add(new Rectangle(
             590,  // x - з'єднується з центральною кімнатою
             341,  // y - центр по вертикалі
-            180,  // width - до правої кімнати
+            245,  // width - до правої кімнати
             24    // height - висота коридору
         ));
 

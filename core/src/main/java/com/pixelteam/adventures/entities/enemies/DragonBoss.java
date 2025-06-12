@@ -306,8 +306,8 @@ public class DragonBoss extends Boss {
         if (weapon == null || weapon.getTexture() == null) return;
 
         // Розмір зброї (масштабуємо для боса)
-        float weaponWidth = weapon.getWidth();
-        float weaponHeight = weapon.getHeight();
+        float weaponWidth = (float) (weapon.getWidth()*1.3);
+        float weaponHeight = (float) (weapon.getHeight()*1.3);
 
         float offsetX;
         float offsetY;

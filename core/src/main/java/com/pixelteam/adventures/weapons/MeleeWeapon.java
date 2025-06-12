@@ -49,8 +49,8 @@ public class MeleeWeapon extends Weapon {
         // Set dimensions based on loaded texture, or use defaults
         if (this.texture != null) {
 
-            this.width = 45;
-            this.height = 64;
+            this.width = 30;
+            this.height = 48;
         }
 
         this.range = 100;

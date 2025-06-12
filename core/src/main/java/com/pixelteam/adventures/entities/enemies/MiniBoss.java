@@ -337,11 +337,11 @@ public class MiniBoss extends Boss {
 
         if (facingLeft) {
             offsetX = -23.0f;
-            offsetY = -16.0f;
+            offsetY = -19.0f;
             totalRotation = weaponRotation + weaponAttackAnimation;
         } else {
             offsetX = 23.0f;
-            offsetY = -16.0f;
+            offsetY = -19.0f;
             totalRotation = weaponRotation - weaponAttackAnimation;
         }
 

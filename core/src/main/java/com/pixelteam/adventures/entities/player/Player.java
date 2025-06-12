@@ -38,8 +38,8 @@ public class Player extends Character {
     public Player(float x, float y) {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0.0F, 0.0F);
-        this.width = 64.0F;
-        this.height = 84.0F;
+        this.width = 50.0F;
+        this.height = 68.0F;
         this.health = 300;
         this.maxHealth = 300;
         this.speed = 200.0F;

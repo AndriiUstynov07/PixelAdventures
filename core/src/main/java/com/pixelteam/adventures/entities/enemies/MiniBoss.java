@@ -328,20 +328,20 @@ public class MiniBoss extends Boss {
         if (weapon == null || weapon.getTexture() == null) return;
 
         // Розмір зброї (трохи менший для міні-боса)
-        float weaponWidth = weapon.getWidth() * 0.8f;
-        float weaponHeight = weapon.getHeight() * 0.8f;
+        float weaponWidth = weapon.getWidth() * 0.7f;
+        float weaponHeight = weapon.getHeight() * 0.7f;
 
         float offsetX;
         float offsetY;
         float totalRotation;
 
         if (facingLeft) {
-            offsetX = -18.0f;
-            offsetY = -1.0f;
+            offsetX = -23.0f;
+            offsetY = -16.0f;
             totalRotation = weaponRotation + weaponAttackAnimation;
         } else {
-            offsetX = 18.0f;
-            offsetY = -1.0f;
+            offsetX = 23.0f;
+            offsetY = -16.0f;
             totalRotation = weaponRotation - weaponAttackAnimation;
         }
 

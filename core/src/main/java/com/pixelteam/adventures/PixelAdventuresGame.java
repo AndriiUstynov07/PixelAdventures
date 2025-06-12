@@ -119,8 +119,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
 
         // Завантаження зброї міні-боса
-        if (Gdx.files.internal("images/weapons/mini_boss_weapon.png").exists()) {
-            MeleeWeapon miniBossWeapon = new MeleeWeapon("Mini Boss Weapon", 20, 1.0f, "images/weapons/mini_boss_weapon.png");
+        if (Gdx.files.internal("images/weapons/monster_sword.png").exists()) {
+            MeleeWeapon miniBossWeapon = new MeleeWeapon("Mini Boss Weapon", 20, 1.0f, "images/weapons/monster_sword.png");
             miniBoss.equipWeapon(miniBossWeapon);
         } else if (Gdx.files.internal("images/weapons/axe.png").exists()) {
             MeleeWeapon miniBossWeapon = new MeleeWeapon("Mini Boss Axe", 20, 1.0f, "images/weapons/axe.png");

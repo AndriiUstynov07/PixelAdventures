@@ -256,6 +256,11 @@ public class Player extends Character {
             } else {
                 batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
             }
+        } else{
+            if(!this.alive) {
+                this.texture = new Texture(Gdx.files.internal("images/other/RIP.png"));
+                batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
+            }
         }
 
         // Малюємо зброю, тільки якщо гравець живий і має зброю

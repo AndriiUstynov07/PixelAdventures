@@ -10,7 +10,7 @@ import com.pixelteam.adventures.utils.Stats;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
 
 public class MiniBoss extends Boss {
-    private static final float MINI_BOSS_SIZE = 96f; // Менший розмір ніж головний босс
+    private static final float MINI_BOSS_SIZE = 70f; // Менший розмір ніж головний босс
     private static final int MINI_BOSS_HEALTH = 250;
     private static final float MINI_BOSS_SPEED = 75f; // Швидший за головного боса
     private static final float ATTACK_RANGE = 50f;
@@ -30,6 +30,7 @@ public class MiniBoss extends Boss {
     private boolean isAttacking; // Whether mini-boss is currently attacking
     private float weaponAttackAnimation; // Animation progress for weapon attack
     private boolean weaponSwingDirection; // Direction of weapon swing (true = forward, false = backward)
+    private static Texture pixelTexture;
 
     // Implement the abstract method from GameObject
     @Override
@@ -336,12 +337,12 @@ public class MiniBoss extends Boss {
         float totalRotation;
 
         if (facingLeft) {
-            offsetX = -23.0f;
-            offsetY = -19.0f;
+            offsetX = -27.0f;
+            offsetY = -7.0f;
             totalRotation = weaponRotation + weaponAttackAnimation;
         } else {
-            offsetX = 23.0f;
-            offsetY = -19.0f;
+            offsetX = 27.0f;
+            offsetY = -7.0f;
             totalRotation = weaponRotation - weaponAttackAnimation;
         }
 
@@ -361,8 +362,27 @@ public class MiniBoss extends Boss {
     }
 
     private void renderHealthBar(SpriteBatch batch) {
-        // Тут можна додати візуалізацію смужки здоров'я
-        // Поки що залишимо порожнім, оскільки потрібні додаткові текстури
+        // Параметри смужки здоров'я
+        float barWidth = 70f;
+        float barHeight = 8f;
+        float barOffsetY = height;
+
+        // Позиція смужки над міні-босом
+        float barX = position.x + (width - barWidth) / 2f;
+        float barY = position.y + barOffsetY;
+
+        float healthPercent = (float) health / (float) maxHealth;
+
+        // Малюємо фон смужки
+        batch.setColor(0.2f, 0.2f, 0.2f, 0.8f);
+        batch.draw(getPixelTexture(), barX - 2f, barY - 2f, barWidth + 4f, barHeight + 4f);
+
+        // Основна смужка здоров'я (градієнт від зеленого до червоного)
+        batch.setColor(1.0f - healthPercent, healthPercent, 0.0f, 1.0f);
+        batch.draw(getPixelTexture(), barX, barY, barWidth * healthPercent, barHeight);
+
+        // Повертаємо білий колір
+        batch.setColor(1f, 1f, 1f, 1f);
     }
 
     public void attack() {
@@ -491,8 +511,23 @@ public class MiniBoss extends Boss {
         return this.facingLeft;
     }
 
+    private Texture getPixelTexture() {
+        if (pixelTexture == null) {
+            com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+            pixmap.setColor(1, 1, 1, 1);
+            pixmap.fill();
+            pixelTexture = new Texture(pixmap);
+            pixmap.dispose();
+        }
+        return pixelTexture;
+    }
+
     public void dispose() {
         // Clean up any resources
         // Unlike DragonBoss, MiniBoss doesn't have a pixelTexture to dispose
+        if (pixelTexture != null) {
+            pixelTexture.dispose();
+            pixelTexture = null;
+        }
     }
 }

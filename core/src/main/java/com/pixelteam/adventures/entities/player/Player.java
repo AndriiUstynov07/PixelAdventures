@@ -39,7 +39,7 @@ public class Player extends Character {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0.0F, 0.0F);
         this.width = 64.0F;
-        this.height = 64.0F;
+        this.height = 84.0F;
         this.health = 300;
         this.maxHealth = 300;
         this.speed = 200.0F;

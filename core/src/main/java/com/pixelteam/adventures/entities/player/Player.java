@@ -1,5 +1,8 @@
 package com.pixelteam.adventures.entities.player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -7,12 +10,9 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.pixelteam.adventures.entities.Character;
 import com.pixelteam.adventures.entities.enemies.Boss;
-import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.items.Armor;
 import com.pixelteam.adventures.utils.Stats;
 import com.pixelteam.adventures.weapons.Weapon;
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class Player extends Character {

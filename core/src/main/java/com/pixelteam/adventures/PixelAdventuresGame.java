@@ -42,6 +42,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
+    private static final float LEVEL2_SCALE = 3.0f; // Scale factor for level 2
 
     private List<Trap> traps;
     private Texture trapTexture;
@@ -49,7 +50,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     // New level transition variables
     private Texture map2Texture;
     private boolean isLevel2 = false;
-    private Vector2 level2PlayerSpawn = new Vector2(900f, 300f); // Right bottom room position
+    private Vector2 level2PlayerSpawn = new Vector2(995f, 65f); // Adjusted spawn position (770 + 50 = 820, 175 - 50 = 125)
 
     private BitmapFont font;
 
@@ -323,8 +324,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                 // Transition to level 2
                 isLevel2 = true;
                 backgroundTexture = map2Texture;
+                // Scale world size for level 2
+                worldWidth *= LEVEL2_SCALE;
+                worldHeight *= LEVEL2_SCALE;
+                // Update viewport for new world size
+                viewport.setWorldSize(worldWidth * 0.412f, worldHeight * 0.412f);
+                viewport.apply();
                 // Move player to level 2 spawn position
-                player.getPosition().set(level2PlayerSpawn.x, level2PlayerSpawn.y);
+                player.getPosition().set(level2PlayerSpawn.x * LEVEL2_SCALE, level2PlayerSpawn.y * LEVEL2_SCALE);
                 // Reset camera to follow player
                 camera.position.set(
                     player.getPosition().x + player.getWidth() / 2,

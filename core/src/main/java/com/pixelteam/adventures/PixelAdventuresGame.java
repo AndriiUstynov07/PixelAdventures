@@ -1,12 +1,10 @@
 package com.pixelteam.adventures;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -21,7 +19,6 @@ import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.entities.enemies.MiniBoss;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
-import com.pixelteam.adventures.entities.HealthPotion;
 
 public class PixelAdventuresGame extends ApplicationAdapter {
     private SpriteBatch batch;
@@ -44,23 +41,43 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
+    private static final float LEVEL2_SCALE = 3.0f; // Scale factor for level 2
+    private float viewportWidth;
+    private float viewportHeight;
 
     private List<Trap> traps;
     private Texture trapTexture;
 
-    private List<HealthPotion> potions;
-    private Texture potionTexture;
-
     // New level transition variables
     private Texture map2Texture;
     private boolean isLevel2 = false;
-    private Vector2 level2PlayerSpawn = new Vector2(900f, 300f); // Right bottom room position
+    private Vector2 level2PlayerSpawn = new Vector2(995f, 65f); // Adjusted spawn position (770 + 50 = 820, 175 - 50 = 125)
 
     private BitmapFont font;
+
+    private boolean isLoading = true;
+    private float loadingTime = 0f;
+    private static final float LOADING_DURATION = 3f; // 3 seconds loading screen
+    private Texture loadingTexture;
+    private BitmapFont loadingFont;
+
+    // Game Over variables
+    private float gameOverTimer = 0f;
+    private static final float GAME_OVER_DELAY = 2f; // 2 seconds delay
+    private Texture gameOverTexture;
+    private boolean showGameOver = false;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
+
+        // Load loading screen resources
+        loadingTexture = new Texture(Gdx.files.internal("images/environment/tiles/loadingscreen.png"));
+        loadingFont = new BitmapFont();
+        loadingFont.getData().setScale(2f);
+
+        // Load game over screen
+        gameOverTexture = new Texture(Gdx.files.internal("images/environment/tiles/gameoverscreen.png"));
 
         // Завантаження фонового зображення
         backgroundTexture = new Texture(Gdx.files.internal("images/environment/tiles/map1.png"));
@@ -116,14 +133,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         traps.add(new Trap(room2X + room2Width, room2Y + room2Height - trapSize, trapSize, 70, trapTexture));
         traps.add(new Trap(327f, 288f, trapSize, 70, trapTexture));
         traps.add(new Trap(695f, 350f, trapSize, 70, trapTexture));
-
-        // Health potions
-        potionTexture = new Texture(Gdx.files.internal("images/other/health_potion.png"));
-        potions = new ArrayList<>();
-        float potionSize = 40f;
-        float potionX = room2X + trapSize * 2f;
-        float potionY = room2Y + room2Height - potionSize;
-        potions.add(new HealthPotion(potionX, potionY, potionSize, 100, potionTexture));
 
         // Завантаження текстури головного боса
         if (Gdx.files.internal("images/monsters/big_boss_1.PNG").exists()) {
@@ -199,8 +208,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         worldWidth = 1280f;  // Ширина карти
         worldHeight = 720f;  // Висота карти
 
-        float viewportWidth = worldWidth * 0.412f;
-        float viewportHeight = worldHeight * 0.412f;
+        viewportWidth = worldWidth * 0.412f;
+        viewportHeight = worldHeight * 0.412f;
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(viewportWidth, viewportHeight, camera);
@@ -221,6 +230,30 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     @Override
     public void render() {
+        if (isLoading) {
+            // Show loading screen
+            ScreenUtils.clear(0, 0, 0, 1);
+            batch.begin();
+
+            // Draw loading background
+            batch.draw(loadingTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+            // Draw loading text
+            String loadingText = "Loading... " + (int)((loadingTime / LOADING_DURATION) * 100) + "%";
+            loadingFont.draw(batch, loadingText,
+                Gdx.graphics.getWidth() / 2f - 100,
+                Gdx.graphics.getHeight() / 2f);
+
+            batch.end();
+
+            // Update loading time
+            loadingTime += Gdx.graphics.getDeltaTime();
+            if (loadingTime >= LOADING_DURATION) {
+                isLoading = false;
+            }
+            return;
+        }
+
         // Оновлення deltaTime
         deltaTime = Gdx.graphics.getDeltaTime();
 
@@ -256,17 +289,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                     trap.trigger();
                 }
             }
-
-            // Check collision with health potions
-            Iterator<HealthPotion> potionIterator = potions.iterator();
-            while (potionIterator.hasNext()) {
-                HealthPotion potion = potionIterator.next();
-                if (potion.isActive() && player.getBounds().overlaps(potion.getBounds())) {
-                    player.heal(potion.getHealAmount());
-                    potion.setActive(false);
-                    potionIterator.remove();
-                }
-            }
         }
 
         // Оновлюємо позицію камери, щоб вона слідувала за гравцем
@@ -281,8 +303,30 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Оновлюємо камеру
         camera.update();
 
+        // Check for game over
+        if (!player.isAlive() && !showGameOver) {
+            gameOverTimer += Gdx.graphics.getDeltaTime();
+            if (gameOverTimer >= GAME_OVER_DELAY) {
+                showGameOver = true;
+            }
+        }
+
         // Очищаємо екран
         ScreenUtils.clear(0, 0, 0, 1);
+
+        if (showGameOver) {
+            // Create a new camera for game over screen without zoom
+            OrthographicCamera gameOverCamera = new OrthographicCamera();
+            gameOverCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            gameOverCamera.update();
+
+            // Draw game over screen using the new camera
+            batch.setProjectionMatrix(gameOverCamera.combined);
+            batch.begin();
+            batch.draw(gameOverTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.end();
+            return;
+        }
 
         // Встановлюємо проекцію камери для SpriteBatch
         batch.setProjectionMatrix(camera.combined);
@@ -294,11 +338,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Рендеринг пастки
         for (Trap trap : traps) {
             trap.render(batch);
-        }
-
-        // Рендеринг зілля
-        for (HealthPotion potion : potions) {
-            potion.render(batch);
         }
 
         // Check if DragonBoss is dead and render portal if it is
@@ -333,54 +372,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Рендеринг смужки здоров'я гравця завжди (навіть якщо мертвий, щоб показати 0 HP)
         player.renderHealthBar(batch);
 
-        // Якщо гравець мертвий, можна показати повідомлення "Game Over"
-        if (!player.isAlive()) {
-            renderGameOver(batch);
-        }
-
-        // Check if both bosses are defeated
-        if (boss != null && miniBoss != null && !boss.isAlive() && !miniBoss.isAlive() && !isLevel2) {
-            // Show portal when both bosses are defeated
-            showPortal = true;
-
-            // Check if player is near portal
-            float distanceToPortal = player.getPosition().dst(portalPosition);
-            canEnterPortal = distanceToPortal <= PORTAL_INTERACTION_DISTANCE;
-
-            // Check for E key press near portal
-            if (canEnterPortal && Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                // Transition to level 2
-                isLevel2 = true;
-                backgroundTexture = map2Texture;
-                // Move player to level 2 spawn position
-                player.getPosition().set(level2PlayerSpawn.x, level2PlayerSpawn.y);
-                // Reset camera to follow player
-                camera.position.set(
-                    player.getPosition().x + player.getWidth() / 2,
-                    player.getPosition().y + player.getHeight() / 2,
-                    0
-                );
-                // Clear all traps from level 1
-                traps.clear();
-                // Hide portal and interaction text
-                showPortal = false;
-                canEnterPortal = false;
-                // Dispose portal texture
-                if (portalTexture != null) {
-                    portalTexture.dispose();
-                    portalTexture = null;
-                }
-            }
-        }
-
         batch.end();
-    }
-
-    // Додайте цей метод до основного класу гри (опціонально)
-    private void renderGameOver(SpriteBatch batch) {
-        // Тут можна додати текст "Game Over" або інший UI елемент
-        // Поки що просто залишимо порожнім, оскільки для тексту потрібен BitmapFont
-        // System.out.println("Game Over!"); // Для налагодження
     }
 
     private void checkPlayerBossCollision(DragonBoss boss) {
@@ -466,12 +458,21 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         if (trapTexture != null) trapTexture.dispose();
 
-        if (potionTexture != null) potionTexture.dispose();
-
         if (map2Texture != null) {
             map2Texture.dispose();
         }
 
         font.dispose();
+
+        if (loadingTexture != null) {
+            loadingTexture.dispose();
+        }
+        if (loadingFont != null) {
+            loadingFont.dispose();
+        }
+
+        if (gameOverTexture != null) {
+            gameOverTexture.dispose();
+        }
     }
 }

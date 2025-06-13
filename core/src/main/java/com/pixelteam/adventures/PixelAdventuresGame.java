@@ -54,9 +54,20 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     private BitmapFont font;
 
+    private boolean isLoading = true;
+    private float loadingTime = 0f;
+    private static final float LOADING_DURATION = 3f; // 3 seconds loading screen
+    private Texture loadingTexture;
+    private BitmapFont loadingFont;
+
     @Override
     public void create() {
         batch = new SpriteBatch();
+
+        // Load loading screen resources
+        loadingTexture = new Texture(Gdx.files.internal("images/environment/tiles/loadingscreen.png"));
+        loadingFont = new BitmapFont();
+        loadingFont.getData().setScale(2f);
 
         // Завантаження фонового зображення
         backgroundTexture = new Texture(Gdx.files.internal("images/environment/tiles/map1.png"));
@@ -209,6 +220,30 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     @Override
     public void render() {
+        if (isLoading) {
+            // Show loading screen
+            ScreenUtils.clear(0, 0, 0, 1);
+            batch.begin();
+            
+            // Draw loading background
+            batch.draw(loadingTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            
+            // Draw loading text
+            String loadingText = "Loading... " + (int)((loadingTime / LOADING_DURATION) * 100) + "%";
+            loadingFont.draw(batch, loadingText, 
+                Gdx.graphics.getWidth() / 2f - 100, // Approximate center position
+                Gdx.graphics.getHeight() / 2f);
+            
+            batch.end();
+            
+            // Update loading time
+            loadingTime += Gdx.graphics.getDeltaTime();
+            if (loadingTime >= LOADING_DURATION) {
+                isLoading = false;
+            }
+            return;
+        }
+
         // Оновлення deltaTime
         deltaTime = Gdx.graphics.getDeltaTime();
 
@@ -449,5 +484,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
 
         font.dispose();
+
+        if (loadingTexture != null) {
+            loadingTexture.dispose();
+        }
+        if (loadingFont != null) {
+            loadingFont.dispose();
+        }
     }
 }

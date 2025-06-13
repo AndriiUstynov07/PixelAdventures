@@ -1,5 +1,7 @@
 package com.pixelteam.adventures.entities.enemies;
 
+import com.pixelteam.adventures.entities.player.Player;
+import com.pixelteam.adventures.weapons.MeleeWeapon;
 import com.pixelteam.adventures.weapons.Weapon;
 
 public abstract class Boss extends Enemy {
@@ -33,5 +35,11 @@ public abstract class Boss extends Enemy {
 
     public float getWidth() {
         return 0;
+    }
+
+    public void setTarget(Player player) {
+    }
+
+    public void equipWeapon(MeleeWeapon weapon) {
     }
 }

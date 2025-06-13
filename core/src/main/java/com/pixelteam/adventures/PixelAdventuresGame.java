@@ -1,22 +1,25 @@
 package com.pixelteam.adventures;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.pixelteam.adventures.entities.player.Player;
+import com.pixelteam.adventures.entities.Trap;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.entities.enemies.MiniBoss;
+import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
-import com.pixelteam.adventures.entities.Trap;
-import java.util.ArrayList;
-import java.util.List;
 
 public class PixelAdventuresGame extends ApplicationAdapter {
     private SpriteBatch batch;
@@ -31,6 +34,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Texture portalTexture;
     private boolean showPortal = false;
     private Vector2 portalPosition = new Vector2();
+    private boolean canEnterPortal = false;
+    private static final float PORTAL_INTERACTION_DISTANCE = 100f; // Distance to interact with portal
 
     // Camera system
     private OrthographicCamera camera;
@@ -40,6 +45,13 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     private List<Trap> traps;
     private Texture trapTexture;
+
+    // New level transition variables
+    private Texture map2Texture;
+    private boolean isLevel2 = false;
+    private Vector2 level2PlayerSpawn = new Vector2(900f, 300f); // Right bottom room position
+
+    private BitmapFont font;
 
     @Override
     public void create() {
@@ -187,6 +199,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             player.getPosition().y + player.getHeight() / 2,
             0
         );
+
+        // Load map2 texture
+        map2Texture = new Texture(Gdx.files.internal("images/environment/tiles/map2.png"));
+
+        font = new BitmapFont();
     }
 
     @Override
@@ -264,6 +281,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Render portal if it should be shown (before player so it appears behind)
         if (showPortal && portalTexture != null) {
             batch.draw(portalTexture, portalPosition.x, portalPosition.y, 120f, 220f);
+            
+            // Show interaction prompt if player is near portal
+            if (canEnterPortal) {
+                font.draw(batch, "Press E to enter", portalPosition.x, portalPosition.y - 20);
+            }
         }
 
         // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
@@ -287,6 +309,41 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             renderGameOver(batch);
         }
 
+        // Check if both bosses are defeated
+        if (boss != null && miniBoss != null && !boss.isAlive() && !miniBoss.isAlive() && !isLevel2) {
+            // Show portal when both bosses are defeated
+            showPortal = true;
+            
+            // Check if player is near portal
+            float distanceToPortal = player.getPosition().dst(portalPosition);
+            canEnterPortal = distanceToPortal <= PORTAL_INTERACTION_DISTANCE;
+            
+            // Check for E key press near portal
+            if (canEnterPortal && Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                // Transition to level 2
+                isLevel2 = true;
+                backgroundTexture = map2Texture;
+                // Move player to level 2 spawn position
+                player.getPosition().set(level2PlayerSpawn.x, level2PlayerSpawn.y);
+                // Reset camera to follow player
+                camera.position.set(
+                    player.getPosition().x + player.getWidth() / 2,
+                    player.getPosition().y + player.getHeight() / 2,
+                    0
+                );
+                // Clear all traps from level 1
+                traps.clear();
+                // Hide portal and interaction text
+                showPortal = false;
+                canEnterPortal = false;
+                // Dispose portal texture
+                if (portalTexture != null) {
+                    portalTexture.dispose();
+                    portalTexture = null;
+                }
+            }
+        }
+
         batch.end();
     }
 
@@ -302,7 +359,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (!player.isAlive() || !boss.isAlive()) return;
 
         if (player.getBounds().overlaps(boss.getBounds())) {
-            // Розрахунок вектора відштовхування
+            // Розрахунок вектора відштовхуванняdd
             Vector2 playerCenter = new Vector2(
                 player.getPosition().x + player.getWidth() / 2,
                 player.getPosition().y + player.getHeight() / 2
@@ -379,5 +436,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (portalTexture != null) portalTexture.dispose();
 
         if (trapTexture != null) trapTexture.dispose();
+
+        if (map2Texture != null) {
+            map2Texture.dispose();
+        }
+
+        font.dispose();
     }
 }

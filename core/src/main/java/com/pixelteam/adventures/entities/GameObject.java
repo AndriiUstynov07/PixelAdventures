@@ -26,4 +26,7 @@ public abstract class GameObject {
         this.texture = playerTexture;
     }
     public Texture getTexture() { return texture; }
+
+    public void dispose() {
+    }
 }

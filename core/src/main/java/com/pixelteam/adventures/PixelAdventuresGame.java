@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -43,6 +42,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private float worldWidth;
     private float worldHeight;
     private static final float LEVEL2_SCALE = 3.0f; // Scale factor for level 2
+    private float viewportWidth;
+    private float viewportHeight;
 
     private List<Trap> traps;
     private Texture trapTexture;
@@ -59,6 +60,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private static final float LOADING_DURATION = 3f; // 3 seconds loading screen
     private Texture loadingTexture;
     private BitmapFont loadingFont;
+    
+    // Game Over variables
+    private float gameOverTimer = 0f;
+    private static final float GAME_OVER_DELAY = 2f; // 2 seconds delay
+    private Texture gameOverTexture;
+    private boolean showGameOver = false;
 
     @Override
     public void create() {
@@ -68,6 +75,9 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         loadingTexture = new Texture(Gdx.files.internal("images/environment/tiles/loadingscreen.png"));
         loadingFont = new BitmapFont();
         loadingFont.getData().setScale(2f);
+
+        // Load game over screen
+        gameOverTexture = new Texture(Gdx.files.internal("images/environment/tiles/gameoverscreen.png"));
 
         // Завантаження фонового зображення
         backgroundTexture = new Texture(Gdx.files.internal("images/environment/tiles/map1.png"));
@@ -198,8 +208,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         worldWidth = 1280f;  // Ширина карти
         worldHeight = 720f;  // Висота карти
 
-        float viewportWidth = worldWidth * 0.412f;
-        float viewportHeight = worldHeight * 0.412f;
+        viewportWidth = worldWidth * 0.412f;
+        viewportHeight = worldHeight * 0.412f;
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(viewportWidth, viewportHeight, camera);
@@ -231,7 +241,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             // Draw loading text
             String loadingText = "Loading... " + (int)((loadingTime / LOADING_DURATION) * 100) + "%";
             loadingFont.draw(batch, loadingText, 
-                Gdx.graphics.getWidth() / 2f - 100, // Approximate center position
+                Gdx.graphics.getWidth() / 2f - 100,
                 Gdx.graphics.getHeight() / 2f);
             
             batch.end();
@@ -293,8 +303,30 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Оновлюємо камеру
         camera.update();
 
+        // Check for game over
+        if (!player.isAlive() && !showGameOver) {
+            gameOverTimer += Gdx.graphics.getDeltaTime();
+            if (gameOverTimer >= GAME_OVER_DELAY) {
+                showGameOver = true;
+            }
+        }
+
         // Очищаємо екран
         ScreenUtils.clear(0, 0, 0, 1);
+
+        if (showGameOver) {
+            // Create a new camera for game over screen without zoom
+            OrthographicCamera gameOverCamera = new OrthographicCamera();
+            gameOverCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            gameOverCamera.update();
+            
+            // Draw game over screen using the new camera
+            batch.setProjectionMatrix(gameOverCamera.combined);
+            batch.begin();
+            batch.draw(gameOverTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.end();
+            return;
+        }
 
         // Встановлюємо проекцію камери для SpriteBatch
         batch.setProjectionMatrix(camera.combined);
@@ -340,60 +372,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Рендеринг смужки здоров'я гравця завжди (навіть якщо мертвий, щоб показати 0 HP)
         player.renderHealthBar(batch);
 
-        // Якщо гравець мертвий, можна показати повідомлення "Game Over"
-        if (!player.isAlive()) {
-            renderGameOver(batch);
-        }
-
-        // Check if both bosses are defeated
-        if (boss != null && miniBoss != null && !boss.isAlive() && !miniBoss.isAlive() && !isLevel2) {
-            // Show portal when both bosses are defeated
-            showPortal = true;
-            
-            // Check if player is near portal
-            float distanceToPortal = player.getPosition().dst(portalPosition);
-            canEnterPortal = distanceToPortal <= PORTAL_INTERACTION_DISTANCE;
-            
-            // Check for E key press near portal
-            if (canEnterPortal && Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                // Transition to level 2
-                isLevel2 = true;
-                backgroundTexture = map2Texture;
-                // Scale world size for level 2
-                worldWidth *= LEVEL2_SCALE;
-                worldHeight *= LEVEL2_SCALE;
-                // Update viewport for new world size
-                viewport.setWorldSize(worldWidth * 0.412f, worldHeight * 0.412f);
-                viewport.apply();
-                // Move player to level 2 spawn position
-                player.getPosition().set(level2PlayerSpawn.x * LEVEL2_SCALE, level2PlayerSpawn.y * LEVEL2_SCALE);
-                // Reset camera to follow player
-                camera.position.set(
-                    player.getPosition().x + player.getWidth() / 2,
-                    player.getPosition().y + player.getHeight() / 2,
-                    0
-                );
-                // Clear all traps from level 1
-                traps.clear();
-                // Hide portal and interaction text
-                showPortal = false;
-                canEnterPortal = false;
-                // Dispose portal texture
-                if (portalTexture != null) {
-                    portalTexture.dispose();
-                    portalTexture = null;
-                }
-            }
-        }
-
         batch.end();
-    }
-
-    // Додайте цей метод до основного класу гри (опціонально)
-    private void renderGameOver(SpriteBatch batch) {
-        // Тут можна додати текст "Game Over" або інший UI елемент
-        // Поки що просто залишимо порожнім, оскільки для тексту потрібен BitmapFont
-        // System.out.println("Game Over!"); // Для налагодження
     }
 
     private void checkPlayerBossCollision(DragonBoss boss) {
@@ -490,6 +469,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
         if (loadingFont != null) {
             loadingFont.dispose();
+        }
+
+        if (gameOverTexture != null) {
+            gameOverTexture.dispose();
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.pixelteam.adventures;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -19,6 +20,8 @@ import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.entities.enemies.MiniBoss;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
+import com.pixelteam.adventures.entities.HealthPotion;
+
 
 public class PixelAdventuresGame extends ApplicationAdapter {
     private SpriteBatch batch;
@@ -47,6 +50,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     private List<Trap> traps;
     private Texture trapTexture;
+    private List<HealthPotion> potions;
+    private Texture potionTexture;
 
     // New level transition variables
     private Texture map2Texture;
@@ -133,6 +138,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         traps.add(new Trap(room2X + room2Width, room2Y + room2Height - trapSize, trapSize, 70, trapTexture));
         traps.add(new Trap(327f, 288f, trapSize, 70, trapTexture));
         traps.add(new Trap(695f, 350f, trapSize, 70, trapTexture));
+
+        // Health potions
+        potionTexture = new Texture(Gdx.files.internal("images/other/health_potion.png"));
+        potions = new ArrayList<>();
+        float potionSize = 40f;
+        float potionX = room2X + trapSize * 2f;
+        float potionY = room2Y + room2Height - potionSize;
+        potions.add(new HealthPotion(potionX, potionY, potionSize, 100, potionTexture));
 
         // Завантаження текстури головного боса
         if (Gdx.files.internal("images/monsters/big_boss_1.PNG").exists()) {
@@ -291,6 +304,17 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         }
 
+        // Check collision with health potions
+        Iterator<HealthPotion> potionIterator = potions.iterator();
+        while (potionIterator.hasNext()) {
+            HealthPotion potion = potionIterator.next();
+            if (potion.isActive() && player.getBounds().overlaps(potion.getBounds())) {
+                player.heal(potion.getHealAmount());
+                potion.setActive(false);
+                potionIterator.remove();
+            }
+        }
+
         // Оновлюємо позицію камери, щоб вона слідувала за гравцем
         if (player.isAlive()) {
             camera.position.set(
@@ -338,6 +362,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Рендеринг пастки
         for (Trap trap : traps) {
             trap.render(batch);
+        }
+
+        // Рендеринг зілля
+        for (HealthPotion potion : potions) {
+            potion.render(batch);
         }
 
         // Check if DragonBoss is dead and render portal if it is
@@ -457,6 +486,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (portalTexture != null) portalTexture.dispose();
 
         if (trapTexture != null) trapTexture.dispose();
+
+        if (potionTexture != null) potionTexture.dispose();
 
         if (map2Texture != null) {
             map2Texture.dispose();

@@ -13,9 +13,9 @@ public class MiniBoss extends Boss {
     private static final float MINI_BOSS_SIZE = 70f; // Менший розмір ніж головний босс
     private static final int MINI_BOSS_HEALTH = 250;
     private static final float MINI_BOSS_SPEED = 75f; // Швидший за головного боса
-    private static final float ATTACK_RANGE = 50f;
+    private static final float ATTACK_RANGE = 25f;
     private static final float ATTACK_COOLDOWN = 1.5f;
-    private static final float WEAPON_SWING_COOLDOWN = 0.8f; // Частіше махає зброєю
+    private static final float WEAPON_SWING_COOLDOWN = 1.8f; // Частіше махає зброєю
 
     private float attackTimer;
     private Player target;

@@ -24,6 +24,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private MiniBoss miniBoss;
     private float deltaTime;
 
+    // Portal variables
+    private Texture portalTexture;
+    private boolean showPortal = false;
+    private Vector2 portalPosition = new Vector2();
+
     // Camera system
     private OrthographicCamera camera;
     private Viewport viewport;
@@ -138,6 +143,13 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         Gdx.gl.glTexParameteri(GL20.GL_TEXTURE_2D, GL20.GL_TEXTURE_MIN_FILTER, GL20.GL_NEAREST);
         Gdx.gl.glTexParameteri(GL20.GL_TEXTURE_2D, GL20.GL_TEXTURE_MAG_FILTER, GL20.GL_NEAREST);
 
+        // Load portal texture
+        portalTexture = new Texture(Gdx.files.internal("images/environment/decorations/portal.png"));
+
+        // Set portal position in the middle of the right room
+        portalPosition.x = 835f + (310f - 120f) / 2; // Center of right room minus half of portal width
+        portalPosition.y = 260f + (165f - 220f) / 2; // Center of right room minus half of portal height
+
         // Ініціалізація камери та viewport
         worldWidth = 1280f;  // Ширина карти
         worldHeight = 720f;  // Висота карти
@@ -209,6 +221,17 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Малюємо фонове зображення в оригінальному розмірі
         batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
+
+        // Check if DragonBoss is dead and render portal if it is
+        if (boss != null && !boss.isAlive()) {
+            // Show portal only after DragonBoss is defeated
+            showPortal = true;
+        }
+
+        // Render portal if it should be shown (before player so it appears behind)
+        if (showPortal && portalTexture != null) {
+            batch.draw(portalTexture, portalPosition.x, portalPosition.y, 120f, 220f);
+        }
 
         // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
         player.render(batch);
@@ -319,5 +342,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             if (miniBoss.getWeapon() != null) miniBoss.getWeapon().dispose();
             miniBoss.dispose(); // Виклик dispose для міні-боса
         }
+        // Dispose portal texture
+        if (portalTexture != null) portalTexture.dispose();
     }
 }

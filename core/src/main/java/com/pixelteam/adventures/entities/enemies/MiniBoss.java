@@ -13,9 +13,10 @@ public class MiniBoss extends Boss {
     private static final float MINI_BOSS_SIZE = 70f; // Менший розмір ніж головний босс
     private static final int MINI_BOSS_HEALTH = 250;
     private static final float MINI_BOSS_SPEED = 75f; // Швидший за головного боса
-    private static final float ATTACK_RANGE = 25f;
+    private static final float ATTACK_RANGE = 50f;
     private static final float ATTACK_COOLDOWN = 1.5f;
-    private static final float WEAPON_SWING_COOLDOWN = 1.8f; // Частіше махає зброєю
+    private static final float WEAPON_SWING_COOLDOWN = 0.8f; // Частіше махає зброєю
+    private static final float COLLISION_STUN_DURATION = 0.1f; // Затримка руху при колізії
 
     private float attackTimer;
     private Player target;
@@ -31,6 +32,10 @@ public class MiniBoss extends Boss {
     private float weaponAttackAnimation; // Animation progress for weapon attack
     private boolean weaponSwingDirection; // Direction of weapon swing (true = forward, false = backward)
     private static Texture pixelTexture;
+
+    // Нові змінні для затримки руху при колізії
+    private float collisionStunTimer; // Таймер затримки руху
+    private boolean isStunnedFromCollision; // Чи зупинений через колізію
 
     // Implement the abstract method from GameObject
     @Override
@@ -56,6 +61,14 @@ public class MiniBoss extends Boss {
                 weaponSwingTimer -= deltaTime;
             }
 
+            // Update collision stun timer
+            if (collisionStunTimer > 0) {
+                collisionStunTimer -= deltaTime;
+                if (collisionStunTimer <= 0) {
+                    isStunnedFromCollision = false;
+                }
+            }
+
             // Update weapon animation
             updateWeaponAnimation(deltaTime);
 
@@ -64,8 +77,10 @@ public class MiniBoss extends Boss {
                 weapon.update(deltaTime);
             }
 
-            // Update position
-            position.add(velocity.x * deltaTime, velocity.y * deltaTime);
+            // Update position only if not stunned from collision
+            if (!isStunnedFromCollision) {
+                position.add(velocity.x * deltaTime, velocity.y * deltaTime);
+            }
 
             // Constrain to middle room
             constrainToMiddleRoom();
@@ -75,7 +90,7 @@ public class MiniBoss extends Boss {
     // Implement the abstract method from Character
     @Override
     public void move(Vector2 direction) {
-        if (!alive || !active) return;
+        if (!alive || !active || isStunnedFromCollision) return;
 
         // Set velocity based on direction and speed
         velocity.set(direction).nor().scl(speed);
@@ -116,6 +131,10 @@ public class MiniBoss extends Boss {
         this.isAttacking = false; // Initialize attack state
         this.weaponAttackAnimation = 0f; // Initialize attack animation
         this.weaponSwingDirection = true; // Initialize swing direction
+
+        // Ініціалізація нових змінних для колізії
+        this.collisionStunTimer = 0f;
+        this.isStunnedFromCollision = false;
     }
 
     public void update(float deltaTime, Player player) {
@@ -139,6 +158,14 @@ public class MiniBoss extends Boss {
             damageCooldown -= deltaTime;
         }
 
+        // Update collision stun timer
+        if (collisionStunTimer > 0) {
+            collisionStunTimer -= deltaTime;
+            if (collisionStunTimer <= 0) {
+                isStunnedFromCollision = false;
+            }
+        }
+
         // Update weapon swing timer
         if (weaponSwingTimer > 0) {
             weaponSwingTimer -= deltaTime;
@@ -159,11 +186,18 @@ public class MiniBoss extends Boss {
             weapon.update(deltaTime);
         }
 
-        // ШІ міні-боса
-        updateAI(deltaTime);
+        // ШІ міні-боса (тільки якщо не зупинений через колізію)
+        if (!isStunnedFromCollision) {
+            updateAI(deltaTime);
+        } else {
+            // Якщо зупинений через колізію, зупиняємо рух
+            velocity.set(0, 0);
+        }
 
-        // Оновлення позиції
-        position.add(velocity.x * deltaTime, velocity.y * deltaTime);
+        // Оновлення позиції тільки якщо не зупинений через колізію
+        if (!isStunnedFromCollision) {
+            position.add(velocity.x * deltaTime, velocity.y * deltaTime);
+        }
 
         // Обмеження міні-боса в межах середньої кімнати
         constrainToMiddleRoom();
@@ -465,6 +499,15 @@ public class MiniBoss extends Boss {
         );
     }
 
+    // Новий метод для обробки колізії з гравцем
+    public void onCollisionWithPlayer() {
+        // Запускаємо затримку руху на 0.1 секунди
+        collisionStunTimer = COLLISION_STUN_DURATION;
+        isStunnedFromCollision = true;
+        // Зупиняємо рух негайно
+        velocity.set(0, 0);
+    }
+
     // Метод для екіпірування зброї
     public void equipWeapon(MeleeWeapon weapon) {
         this.weapon = weapon;
@@ -509,6 +552,11 @@ public class MiniBoss extends Boss {
 
     public boolean isFacingLeft() {
         return this.facingLeft;
+    }
+
+    // Getter для перевірки чи зупинений через колізію
+    public boolean isStunnedFromCollision() {
+        return this.isStunnedFromCollision;
     }
 
     private Texture getPixelTexture() {

@@ -14,6 +14,9 @@ import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.entities.enemies.MiniBoss;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
+import com.pixelteam.adventures.entities.Trap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PixelAdventuresGame extends ApplicationAdapter {
     private SpriteBatch batch;
@@ -34,6 +37,9 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
+
+    private List<Trap> traps;
+    private Texture trapTexture;
 
     @Override
     public void create() {
@@ -79,6 +85,20 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Add bosses to player's list for collision detection
         player.addBoss(boss);
         player.addBoss(miniBoss);
+
+        trapTexture = new Texture(Gdx.files.internal("images/other/trap.png"));
+        traps = new ArrayList<>();
+        float trapSize = 48f;
+        float room2X = 385f;
+        float room2Y = 210f;
+        float room2Width = 205f;
+        float room2Height = 230f;
+        traps.add(new Trap(room2X+trapSize, room2Y, trapSize, 70, trapTexture));
+        traps.add(new Trap(room2X + room2Width, room2Y, trapSize, 70, trapTexture));
+        traps.add(new Trap(room2X +trapSize, room2Y + room2Height - trapSize, trapSize, 70, trapTexture));
+        traps.add(new Trap(room2X + room2Width, room2Y + room2Height - trapSize, trapSize, 70, trapTexture));
+        traps.add(new Trap(327f, 288f, trapSize, 70, trapTexture));
+        traps.add(new Trap(695f, 350f, trapSize, 70, trapTexture));
 
         // Завантаження текстури головного боса
         if (Gdx.files.internal("images/monsters/big_boss_1.PNG").exists()) {
@@ -198,6 +218,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             if (miniBoss != null && miniBoss.isAlive()) {
                 checkPlayerMiniBossCollision();
             }
+
+            // Перевірка колізії з пастками (враховуємо тільки нижню частину гравця)
+            for (Trap trap : traps) {
+                if (trap.isActive() && player.getLowerBounds().overlaps(trap.getBounds())) {
+                    player.takeDamage(trap.getDamage());
+                    trap.trigger();
+                }
+            }
         }
 
         // Оновлюємо позицію камери, щоб вона слідувала за гравцем
@@ -221,6 +249,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Малюємо фонове зображення в оригінальному розмірі
         batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
+
+        // Рендеринг пастки
+        for (Trap trap : traps) {
+            trap.render(batch);
+        }
 
         // Check if DragonBoss is dead and render portal if it is
         if (boss != null && !boss.isAlive()) {
@@ -344,5 +377,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
         // Dispose portal texture
         if (portalTexture != null) portalTexture.dispose();
+
+        if (trapTexture != null) trapTexture.dispose();
     }
 }

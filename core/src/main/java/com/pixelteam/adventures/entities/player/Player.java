@@ -372,6 +372,15 @@ public class Player extends Character {
         }
     }
 
+    public void heal(int amount) {
+        if (!this.alive) return;
+
+        this.health += amount;
+        if (this.health > this.maxHealth) {
+            this.health = this.maxHealth;
+        }
+    }
+
     public void die() {
         this.alive = false;
         this.velocity.set(0, 0); // Зупиняємо рух

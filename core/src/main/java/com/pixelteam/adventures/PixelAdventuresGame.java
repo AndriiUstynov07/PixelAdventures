@@ -1,6 +1,7 @@
 package com.pixelteam.adventures;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -20,6 +21,7 @@ import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.entities.enemies.MiniBoss;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
+import com.pixelteam.adventures.entities.HealthPotion;
 
 public class PixelAdventuresGame extends ApplicationAdapter {
     private SpriteBatch batch;
@@ -45,6 +47,9 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     private List<Trap> traps;
     private Texture trapTexture;
+
+    private List<HealthPotion> potions;
+    private Texture potionTexture;
 
     // New level transition variables
     private Texture map2Texture;
@@ -111,6 +116,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         traps.add(new Trap(room2X + room2Width, room2Y + room2Height - trapSize, trapSize, 70, trapTexture));
         traps.add(new Trap(327f, 288f, trapSize, 70, trapTexture));
         traps.add(new Trap(695f, 350f, trapSize, 70, trapTexture));
+
+        // Health potions
+        potionTexture = new Texture(Gdx.files.internal("images/other/health_potion.png"));
+        potions = new ArrayList<>();
+        float potionSize = 40f;
+        float potionX = room2X + trapSize * 2f;
+        float potionY = room2Y + room2Height - potionSize;
+        potions.add(new HealthPotion(potionX, potionY, potionSize, 100, potionTexture));
 
         // Завантаження текстури головного боса
         if (Gdx.files.internal("images/monsters/big_boss_1.PNG").exists()) {
@@ -243,6 +256,17 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                     trap.trigger();
                 }
             }
+
+            // Check collision with health potions
+            Iterator<HealthPotion> potionIterator = potions.iterator();
+            while (potionIterator.hasNext()) {
+                HealthPotion potion = potionIterator.next();
+                if (potion.isActive() && player.getBounds().overlaps(potion.getBounds())) {
+                    player.heal(potion.getHealAmount());
+                    potion.setActive(false);
+                    potionIterator.remove();
+                }
+            }
         }
 
         // Оновлюємо позицію камери, щоб вона слідувала за гравцем
@@ -272,6 +296,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             trap.render(batch);
         }
 
+        // Рендеринг зілля
+        for (HealthPotion potion : potions) {
+            potion.render(batch);
+        }
+
         // Check if DragonBoss is dead and render portal if it is
         if (boss != null && !boss.isAlive()) {
             // Show portal only after DragonBoss is defeated
@@ -281,7 +310,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Render portal if it should be shown (before player so it appears behind)
         if (showPortal && portalTexture != null) {
             batch.draw(portalTexture, portalPosition.x, portalPosition.y, 120f, 220f);
-            
+
             // Show interaction prompt if player is near portal
             if (canEnterPortal) {
                 font.draw(batch, "Press E to enter", portalPosition.x, portalPosition.y - 20);
@@ -313,11 +342,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (boss != null && miniBoss != null && !boss.isAlive() && !miniBoss.isAlive() && !isLevel2) {
             // Show portal when both bosses are defeated
             showPortal = true;
-            
+
             // Check if player is near portal
             float distanceToPortal = player.getPosition().dst(portalPosition);
             canEnterPortal = distanceToPortal <= PORTAL_INTERACTION_DISTANCE;
-            
+
             // Check for E key press near portal
             if (canEnterPortal && Gdx.input.isKeyJustPressed(Input.Keys.E)) {
                 // Transition to level 2
@@ -436,6 +465,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (portalTexture != null) portalTexture.dispose();
 
         if (trapTexture != null) trapTexture.dispose();
+
+        if (potionTexture != null) potionTexture.dispose();
 
         if (map2Texture != null) {
             map2Texture.dispose();

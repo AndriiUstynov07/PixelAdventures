@@ -298,6 +298,11 @@ public class Player extends Character {
         return new Rectangle(this.position.x, this.position.y, this.width, this.height);
     }
 
+    public Rectangle getLowerBounds() {
+        float lowerHeight = this.height * 0.3f;
+        return new Rectangle(this.position.x, this.position.y, this.width, lowerHeight);
+    }
+
     public void attack() {
         if (this.attackCooldown <= 0.0F && this.currentWeapon != null) {
             this.isAttacking = true;

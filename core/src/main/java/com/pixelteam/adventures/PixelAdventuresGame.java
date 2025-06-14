@@ -15,12 +15,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.pixelteam.adventures.entities.HealthPotion;
 import com.pixelteam.adventures.entities.Trap;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
 import com.pixelteam.adventures.entities.enemies.MiniBoss;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
-import com.pixelteam.adventures.entities.HealthPotion;
 
 
 public class PixelAdventuresGame extends ApplicationAdapter {
@@ -373,6 +373,28 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (boss != null && !boss.isAlive()) {
             // Show portal only after DragonBoss is defeated
             showPortal = true;
+        }
+
+        // Check if player is near portal
+        if (showPortal) {
+            float distanceToPortal = player.getPosition().dst(portalPosition);
+            canEnterPortal = distanceToPortal < PORTAL_INTERACTION_DISTANCE;
+
+            // Check for portal interaction
+            if (canEnterPortal && Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.E)) {
+                // Transition to level 2
+                isLevel2 = true;
+                backgroundTexture = map2Texture;
+                player.getPosition().set(level2PlayerSpawn);
+                // Reset camera position to player
+                camera.position.set(
+                    player.getPosition().x + player.getWidth() / 2,
+                    player.getPosition().y + player.getHeight() / 2,
+                    0
+                );
+                // Hide portal after transition
+                showPortal = false;
+            }
         }
 
         // Render portal if it should be shown (before player so it appears behind)

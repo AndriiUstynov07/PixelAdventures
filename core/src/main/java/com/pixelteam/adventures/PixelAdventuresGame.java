@@ -386,12 +386,29 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                 isLevel2 = true;
                 backgroundTexture = map2Texture;
                 player.getPosition().set(level2PlayerSpawn);
+
+                // Make player smaller on level 2
+                float scaleFactor = 0.5f; // 50% of original size
+
+                // Resize player dimensions
+                float originalWidth = player.getWidth();
+                float originalHeight = player.getHeight();
+                player.setWidth(originalWidth * scaleFactor);
+                player.setHeight(originalHeight * scaleFactor);
+
+                // Scale all other player attributes (weapon, speed, damage)
+                player.scaleAllAttributes(scaleFactor);
+
                 // Reset camera position to player
                 camera.position.set(
                     player.getPosition().x + player.getWidth() / 2,
                     player.getPosition().y + player.getHeight() / 2,
                     0
                 );
+
+                // Make camera closer to player on level 2
+                camera.zoom = 0.4f; // Zoom in more by setting zoom to 0.4 (more zoomed in than before)
+
                 // Hide portal after transition
                 showPortal = false;
             }

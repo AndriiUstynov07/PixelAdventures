@@ -35,6 +35,12 @@ public class Player extends Character {
     // Список босів для перевірки колізій
     private List<Boss> bosses;
 
+    // Scale factors for various attributes
+    private float weaponScaleFactor = 1.0f;
+    private float speedScaleFactor = 1.0f;
+    private float damageScaleFactor = 1.0f;
+    private float healthBarScaleFactor = 1.0f;
+
     public Player(float x, float y) {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0.0F, 0.0F);
@@ -244,9 +250,76 @@ public class Player extends Character {
             weaponHeight + 20
         );
     }
+
+    /**
+     * Sets the scale factor for the player's weapon
+     * @param factor the scale factor to apply
+     */
+    public void setWeaponScaleFactor(float factor) {
+        this.weaponScaleFactor = factor;
+    }
+
+    /**
+     * Sets the scale factor for the player's movement speed
+     * @param factor the scale factor to apply
+     */
+    public void setSpeedScaleFactor(float factor) {
+        this.speedScaleFactor = factor;
+        // Update the actual speed
+        this.speed = 200.0F * speedScaleFactor;
+    }
+
+    /**
+     * Sets the scale factor for the player's damage
+     * @param factor the scale factor to apply
+     */
+    public void setDamageScaleFactor(float factor) {
+        this.damageScaleFactor = factor;
+        // Update weapon damage if available
+        if (this.currentWeapon != null) {
+            // Since we can't directly modify the weapon's damage (no setter),
+            // we'll apply the scale factor when checking for boss attacks
+        }
+    }
+
+    /**
+     * Sets the scale factor for the player's health bar
+     * @param factor the scale factor to apply
+     */
+    public void setHealthBarScaleFactor(float factor) {
+        this.healthBarScaleFactor = factor;
+    }
+
+    /**
+     * Scales all player attributes by the given factor
+     * @param factor the scale factor to apply to all attributes
+     */
+    public void scaleAllAttributes(float factor) {
+        // Scale visual dimensions
+        float originalWidth = this.width;
+        float originalHeight = this.height;
+        this.width = originalWidth * factor;
+        this.height = originalHeight * factor;
+
+        // Scale weapon
+        if (this.currentWeapon != null) {
+            this.currentWeapon.setWidth(this.currentWeapon.getWidth() * factor);
+            this.currentWeapon.setHeight(this.currentWeapon.getHeight() * factor);
+        }
+        setWeaponScaleFactor(factor);
+
+        // Scale speed
+        setSpeedScaleFactor(factor);
+
+        // Scale damage
+        setDamageScaleFactor(factor);
+
+        // Scale health bar
+        setHealthBarScaleFactor(factor);
+    }
+
     public void render(SpriteBatch batch) {
         // Встановлюємо повну непрозорість для всіх наступних об'єктів у цьому batch
-        // Це забезпечить, що гравець і його зброя будуть повністю непрозорими.
         batch.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         // Малюємо текстуру гравця, тільки якщо гравець живий
@@ -256,7 +329,7 @@ public class Player extends Character {
             } else {
                 batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
             }
-        } else{
+        } else {
             if(!this.alive) {
                 this.texture = new Texture(Gdx.files.internal("images/other/RIP.png"));
                 batch.draw(this.texture, this.position.x, this.position.y, this.width, this.height);
@@ -271,26 +344,47 @@ public class Player extends Character {
 
             // Визначаємо зміщення та обертання зброї залежно від напрямку гравця
             if (this.facingLeft) {
-                offsetX = -23.0F;
-                offsetY = -1.0F;
-                // Змінюємо swordRotation на 5.0F, якщо це початковий стан
-                // або використовуйте swordRotation, якщо він вже визначений і використовується
-                totalRotation = 5.0F + this.swordAttackAnimation; // Якщо swordRotation завжди 0
+                if (weaponScaleFactor != 1.0f) {
+                    // Налаштування для 2 рівня
+                    offsetX = -10.0F * weaponScaleFactor; // Ще ближче до гравця
+                    offsetY = -1.0F * weaponScaleFactor;
+                } else {
+                    // Налаштування для 1 рівня
+                    offsetX = -23.0F;
+                    offsetY = -1.0F;
+                }
+                totalRotation = 5.0F + this.swordAttackAnimation;
             } else {
-                offsetX = 23.0F;
-                offsetY = -1.0F;
-                // Якщо facingLeft == false, ми використовуємо swordRotation - swordAttackAnimation
+                if (weaponScaleFactor != 1.0f) {
+                    // Налаштування для 2 рівня
+                    offsetX = 10.0F * weaponScaleFactor; // Ще ближче до гравця
+                    offsetY = -1.0F * weaponScaleFactor;
+                } else {
+                    // Налаштування для 1 рівня
+                    offsetX = 23.0F;
+                    offsetY = -1.0F;
+                }
                 totalRotation = this.swordRotation - this.swordAttackAnimation;
             }
 
-            float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
-            float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
+            float swordX = this.position.x + this.width / 2.0F + offsetX - (this.currentWeapon.getWidth() * weaponScaleFactor) / 2.0F;
+            float swordY = this.position.y + this.height / 2.0F + offsetY - (this.currentWeapon.getHeight() * weaponScaleFactor) / 2.0F;
 
-            // Малюємо текстуру зброї
-            batch.draw(this.currentWeapon.getTexture(), swordX, swordY, this.currentWeapon.getWidth() / 2.0F, this.currentWeapon.getHeight() / 2.0F, this.currentWeapon.getWidth(), this.currentWeapon.getHeight(), 1.0F, 1.0F, totalRotation, 0, 0, this.currentWeapon.getTexture().getWidth(), this.currentWeapon.getTexture().getHeight(), false, false);
+            // Малюємо текстуру зброї з урахуванням масштабу
+            batch.draw(this.currentWeapon.getTexture(),
+                swordX, swordY,
+                this.currentWeapon.getWidth() * weaponScaleFactor / 2.0F,
+                this.currentWeapon.getHeight() * weaponScaleFactor / 2.0F,
+                this.currentWeapon.getWidth() * weaponScaleFactor,
+                this.currentWeapon.getHeight() * weaponScaleFactor,
+                1.0F, 1.0F,
+                totalRotation,
+                0, 0,
+                this.currentWeapon.getTexture().getWidth(),
+                this.currentWeapon.getTexture().getHeight(),
+                false, false);
         }
-        // Дуже важливо: повертаємо колір batch на повну непрозорість (білий)
-        // після малювання гравця та зброї, щоб не впливати на інші об'єкти.
+        // Повертаємо білий колір для нормального рендерингу інших об'єктів
         batch.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
@@ -323,30 +417,32 @@ public class Player extends Character {
         float totalRotation;
 
         if (this.facingLeft) {
-            offsetX = -23.0F;
-            offsetY = -1.0F;
+            offsetX = -23.0F * weaponScaleFactor;
+            offsetY = -1.0F * weaponScaleFactor;
             totalRotation = 5.0F + this.swordAttackAnimation;
         } else {
-            offsetX = 23.0F;
-            offsetY = -1.0F;
+            offsetX = 23.0F * weaponScaleFactor;
+            offsetY = -1.0F * weaponScaleFactor;
             totalRotation = this.swordRotation - this.swordAttackAnimation;
         }
 
-        float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
-        float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
+        float swordX = this.position.x + this.width / 2.0F + offsetX - (this.currentWeapon.getWidth() * weaponScaleFactor) / 2.0F;
+        float swordY = this.position.y + this.height / 2.0F + offsetY - (this.currentWeapon.getHeight() * weaponScaleFactor) / 2.0F;
 
         // Create a larger hitbox for the sword to make collision detection more forgiving
         Rectangle swordHitbox = new Rectangle(
-            swordX - 10, // Expand hitbox by 10 pixels on each side
-            swordY - 10,
-            this.currentWeapon.getWidth() + 20,
-            this.currentWeapon.getHeight() + 20
+            swordX - 10 * weaponScaleFactor, // Expand hitbox by 10 pixels on each side, scaled
+            swordY - 10 * weaponScaleFactor,
+            (this.currentWeapon.getWidth() + 20) * weaponScaleFactor,
+            (this.currentWeapon.getHeight() + 20) * weaponScaleFactor
         );
 
         // Check collision with bosses
         for (Boss boss : bosses) {
             if (boss.isAlive() && boss.getBounds().overlaps(swordHitbox)) {
-                boss.takeDamage(this.currentWeapon.getDamage());
+                // Apply damage scale factor to weapon damage
+                int scaledDamage = (int)(this.currentWeapon.getDamage() * damageScaleFactor);
+                boss.takeDamage(scaledDamage);
             }
         }
     }
@@ -400,9 +496,16 @@ public class Player extends Character {
 
     public void renderHealthBar(SpriteBatch batch) {
         // Параметри смужки здоров'я
-        float barWidth = 70f; // Ширина смужки
-        float barHeight = 8f; // Висота смужки
-        float barOffsetY = height;
+        float barWidth = 70f;
+        float barHeight = 8f;
+        float barOffsetY = height + 5f;
+
+        // Застосовуємо масштабування тільки для другого рівня
+        if (healthBarScaleFactor != 1.0f) {
+            barWidth = 20f; // Ще менший розмір для другого рівня
+            barHeight = 2.5f; // Ще менший розмір для другого рівня
+            barOffsetY = height + 1.5f;
+        }
 
         // Позиція смужки
         float barX = position.x + (width - barWidth) / 2f;
@@ -413,10 +516,11 @@ public class Player extends Character {
 
         // Малюємо фон смужки (темно-сірий)
         batch.setColor(0.2f, 0.2f, 0.2f, 0.8f);
-        batch.draw(getPixelTexture(), barX - 2f, barY - 2f, barWidth + 4f, barHeight + 4f);
+        float borderSize = healthBarScaleFactor != 1.0f ? 0.5f : 2f; // Ще менша рамка для другого рівня
+        batch.draw(getPixelTexture(), barX - borderSize, barY - borderSize, barWidth + borderSize * 2, barHeight + borderSize * 2);
 
         // Малюємо смужку здоров'я (червоний колір)
-        batch.setColor(0.8f, 0.1f, 0.1f, 1.0f); // Темно-червоний колір
+        batch.setColor(0.8f, 0.1f, 0.1f, 1.0f);
         batch.draw(getPixelTexture(), barX, barY, barWidth * healthPercent, barHeight);
 
         // Повертаємо білий колір для нормального рендерингу інших об'єктів
@@ -526,5 +630,14 @@ public class Player extends Character {
 
     public boolean isAlive() {
         return alive;
+    }
+
+    // Setter methods for width and height
+    public void setWidth(float width) {
+        this.width = width;
+    }
+
+    public void setHeight(float height) {
+        this.height = height;
     }
 }

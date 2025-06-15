@@ -44,7 +44,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
-    private static final float LEVEL2_SCALE = 3.0f; // Scale factor for level 2
+    private static final float LEVEL2_CAMERA_SCALE = 0.5f; // Scale factor for level 2 camera
+    private static final float LEVEL2_PLAYER_SCALE = 0.25f; // Scale factor for level 2 player
     private float viewportWidth;
     private float viewportHeight;
 
@@ -55,8 +56,13 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     // New level transition variables
     private Texture map2Texture;
-    private boolean isLevel2 = false;
+    private static boolean isLevel2 = false;
     private Vector2 level2PlayerSpawn = new Vector2(995f, 65f); // Adjusted spawn position (770 + 50 = 820, 175 - 50 = 125)
+
+    // Add getter for isLevel2
+    public static boolean isLevel2() {
+        return isLevel2;
+    }
 
     private BitmapFont font;
 
@@ -383,17 +389,41 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             // Check for portal interaction
             if (canEnterPortal && Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.E)) {
                 // Transition to level 2
-                isLevel2 = true;
+                setLevel2();
                 backgroundTexture = map2Texture;
                 player.getPosition().set(level2PlayerSpawn);
+
+                // Apply level 2 scale to viewport and camera
+                viewportWidth = worldWidth * 0.412f * LEVEL2_CAMERA_SCALE;
+                viewportHeight = worldHeight * 0.412f * LEVEL2_CAMERA_SCALE;
+                viewport.setWorldSize(viewportWidth, viewportHeight);
+                viewport.apply();
+
+                // Scale player and its components
+                player.setScale(LEVEL2_PLAYER_SCALE);
+                if (player.getWeapon() != null) {
+                    player.getWeapon().setScale(LEVEL2_PLAYER_SCALE);
+                }
+                player.setHealthBarScale(LEVEL2_PLAYER_SCALE);
+
+                // Set new playable areas for level 2
+                player.setLevel2Areas();
+
+                // Clear traps and portal
+                traps.clear();
+                showPortal = false;
+                canEnterPortal = false;
+                if (portalTexture != null) {
+                    portalTexture.dispose();
+                    portalTexture = null;
+                }
+
                 // Reset camera position to player
                 camera.position.set(
                     player.getPosition().x + player.getWidth() / 2,
                     player.getPosition().y + player.getHeight() / 2,
                     0
                 );
-                // Hide portal after transition
-                showPortal = false;
             }
         }
 
@@ -527,5 +557,13 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (gameOverTexture != null) {
             gameOverTexture.dispose();
         }
+    }
+
+    public void setLevel2() {
+        isLevel2 = true;
+        player.setLevel2Areas();
+        player.setScale(LEVEL2_PLAYER_SCALE);
+        player.setPosition(new Vector2(100, 100));
+        potions.clear(); // Очищаємо зілля при переході на 2 рівень
     }
 }

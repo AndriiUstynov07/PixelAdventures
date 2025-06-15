@@ -35,6 +35,8 @@ public class Player extends Character {
     // Список босів для перевірки колізій
     private List<Boss> bosses;
 
+    private float scale = 1.0f;
+
     public Player(float x, float y) {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0.0F, 0.0F);
@@ -109,13 +111,136 @@ public class Player extends Character {
         ));
     }
 
+
+    private void initializeLevel2PlayableAreas() {
+        playableAreas.clear();
+
+        final float PLAYER_WIDTH = 12.5f;
+        final float PLAYER_HEIGHT = 17.0f;
+
+        // Room 1
+        playableAreas.add(new Rectangle(
+            950.17f + PLAYER_WIDTH,
+            37.91f + PLAYER_HEIGHT,
+            96.69f - PLAYER_WIDTH,
+            63.86f - PLAYER_HEIGHT
+        ));
+
+        // Passage 1 (горизонтальний)
+        playableAreas.add(new Rectangle(
+            678.805f,
+            57.74f + PLAYER_HEIGHT,
+            344.9f,
+            21.65f - PLAYER_HEIGHT
+        ));
+
+        // Room 2
+        playableAreas.add(new Rectangle(
+            513.32f + PLAYER_WIDTH,
+            16.01f + PLAYER_HEIGHT,
+            235.62f - PLAYER_WIDTH,
+            89.04f - PLAYER_HEIGHT
+        ));
+
+        // Passage 2
+        playableAreas.add(new Rectangle(
+            237.92f,
+            57.94f + PLAYER_HEIGHT,
+            343.24f,
+            20.04f - PLAYER_HEIGHT
+        ));
+
+        // Room 3
+        playableAreas.add(new Rectangle(
+            216.16f + PLAYER_WIDTH,
+            29.38f + PLAYER_HEIGHT,
+            90.88f - PLAYER_WIDTH,
+            71.71f - PLAYER_HEIGHT
+        ));
+
+        // Passage 3 (вертикальний)
+        playableAreas.add(new Rectangle(
+            612.25f,
+            70.015f + PLAYER_HEIGHT,
+            35.78f,
+            174.94f - PLAYER_HEIGHT
+        ));
+
+        // Room 4
+        playableAreas.add(new Rectangle(
+            513.89f + PLAYER_WIDTH,
+            216.16f + PLAYER_HEIGHT,
+            235.81f - PLAYER_WIDTH,
+            162.53f - PLAYER_HEIGHT
+        ));
+
+        // Passage 4
+        playableAreas.add(new Rectangle(
+            252.63f,
+            285.11f + PLAYER_HEIGHT,
+            324.64f,
+            25.13f - PLAYER_HEIGHT
+        ));
+
+        // Room 5
+        playableAreas.add(new Rectangle(
+            190.37f + PLAYER_WIDTH,
+            230.34f + PLAYER_HEIGHT,
+            143.16f - PLAYER_WIDTH,
+            120.62f - PLAYER_HEIGHT
+        ));
+
+        // Passage 5 (вертикальний)
+        playableAreas.add(new Rectangle(
+            611.79f,
+            291.17f + PLAYER_HEIGHT,
+            36.63f,
+            411.4f - PLAYER_HEIGHT
+        ));
+
+        // Room 6
+        playableAreas.add(new Rectangle(
+            580.76f + PLAYER_WIDTH,
+            617.40f + PLAYER_HEIGHT,
+            100.86f - PLAYER_WIDTH,
+            57.40f - PLAYER_HEIGHT
+        ));
+    }
+
+
+
+
+
+
+    public void setLevel2Areas() {
+        // Автоматично згенерувати allowed zones з map2.png
+        initializeLevel2PlayableAreas();
+
+        // Зменшуємо швидкість для 2 рівня в 3 рази
+        this.speed = 200f / 3f;
+    }
+
+    public void setLevel1Areas() {
+        initializePlayableAreas();
+        // Повертаємо нормальну швидкість для 1 рівня
+        this.speed = 200f;
+    }
+
+    /**
+     * Автоматично будує playableAreas для рівня 2 на основі прозорості map2.png
+     */
+
+
     private boolean isPositionValid(float x, float y) {
         Rectangle playerBounds = new Rectangle(x, y, this.width, this.height);
 
-        // Перевіряємо, чи гравець хоча б частково знаходиться в одній з дозволених зон
+        // Перевіряємо, чи координати гравця в межах карти
+        if (x < 0 || y < 0 || x > 1280 || y > 720) {
+            return false;
+        }
+
         for (Rectangle area : playableAreas) {
             if (area.overlaps(playerBounds)) {
-                // Додатково перевіряємо колізію з босами
                 return !isCollidingWithBosses(playerBounds);
             }
         }
@@ -264,30 +389,25 @@ public class Player extends Character {
         }
 
         // Малюємо зброю, тільки якщо гравець живий і має зброю
-        if (this.alive && this.currentWeapon != null && this.currentWeapon.getTexture() != null) {
+        if (this.alive && this.currentWeapon != null) {
             float offsetX;
             float offsetY;
             float totalRotation;
 
-            // Визначаємо зміщення та обертання зброї залежно від напрямку гравця
             if (this.facingLeft) {
-                offsetX = -23.0F;
-                offsetY = -1.0F;
-                // Змінюємо swordRotation на 5.0F, якщо це початковий стан
-                // або використовуйте swordRotation, якщо він вже визначений і використовується
-                totalRotation = 5.0F + this.swordAttackAnimation; // Якщо swordRotation завжди 0
+                offsetX = -23.0F * scale;
+                offsetY = -1.0F * scale;
+                totalRotation = 5.0F + this.swordAttackAnimation;
             } else {
-                offsetX = 23.0F;
-                offsetY = -1.0F;
-                // Якщо facingLeft == false, ми використовуємо swordRotation - swordAttackAnimation
+                offsetX = 23.0F * scale;
+                offsetY = -1.0F * scale;
                 totalRotation = this.swordRotation - this.swordAttackAnimation;
             }
 
             float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
             float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
 
-            // Малюємо текстуру зброї
-            batch.draw(this.currentWeapon.getTexture(), swordX, swordY, this.currentWeapon.getWidth() / 2.0F, this.currentWeapon.getHeight() / 2.0F, this.currentWeapon.getWidth(), this.currentWeapon.getHeight(), 1.0F, 1.0F, totalRotation, 0, 0, this.currentWeapon.getTexture().getWidth(), this.currentWeapon.getTexture().getHeight(), false, false);
+            this.currentWeapon.render(batch, swordX, swordY, totalRotation);
         }
         // Дуже важливо: повертаємо колір batch на повну непрозорість (білий)
         // після малювання гравця та зброї, щоб не впливати на інші об'єкти.
@@ -400,8 +520,8 @@ public class Player extends Character {
 
     public void renderHealthBar(SpriteBatch batch) {
         // Параметри смужки здоров'я
-        float barWidth = 70f; // Ширина смужки
-        float barHeight = 8f; // Висота смужки
+        float barWidth = 70f * scale; // Ширина смужки
+        float barHeight = 8f * scale; // Висота смужки
         float barOffsetY = height;
 
         // Позиція смужки
@@ -413,7 +533,7 @@ public class Player extends Character {
 
         // Малюємо фон смужки (темно-сірий)
         batch.setColor(0.2f, 0.2f, 0.2f, 0.8f);
-        batch.draw(getPixelTexture(), barX - 2f, barY - 2f, barWidth + 4f, barHeight + 4f);
+        batch.draw(getPixelTexture(), barX - 2f * scale, barY - 2f * scale, barWidth + 4f * scale, barHeight + 4f * scale);
 
         // Малюємо смужку здоров'я (червоний колір)
         batch.setColor(0.8f, 0.1f, 0.1f, 1.0f); // Темно-червоний колір
@@ -526,5 +646,19 @@ public class Player extends Character {
 
     public boolean isAlive() {
         return alive;
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
+        this.width = 50.0F * scale;
+        this.height = 68.0F * scale;
+    }
+
+    public void setHealthBarScale(float scale) {
+        this.scale = scale;
+    }
+
+    public Weapon getWeapon() {
+        return this.currentWeapon;
     }
 }

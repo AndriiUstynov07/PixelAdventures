@@ -411,6 +411,17 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
                 // Hide portal after transition
                 showPortal = false;
+
+                // Remove all level 1 elements
+                traps.clear();
+                potions.clear();
+
+                // Clear bosses from player's list
+                player.setBosses(new ArrayList<>());
+
+                // Set bosses to null to prevent rendering
+                boss = null;
+                miniBoss = null;
             }
         }
 

@@ -661,4 +661,12 @@ public class Player extends Character {
     public Weapon getWeapon() {
         return this.currentWeapon;
     }
+
+    public float getDamageCooldown() {
+        return this.damageCooldown;
+    }
+
+    public void setDamageCooldown(float cooldown) {
+        this.damageCooldown = cooldown;
+    }
 }

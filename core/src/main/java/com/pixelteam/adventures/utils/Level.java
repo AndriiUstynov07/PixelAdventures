@@ -3,13 +3,12 @@ package com.pixelteam.adventures.utils;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
 import com.pixelteam.adventures.entities.GameObject;
 import com.pixelteam.adventures.entities.enemies.Boss;
 import com.pixelteam.adventures.entities.enemies.Enemy;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
-import com.pixelteam.adventures.entities.enemies.MiniBoss;
+import com.pixelteam.adventures.entities.enemies.MiniBossFirst;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.entities.Trap;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
@@ -107,8 +106,8 @@ public class Level {
         bosses.add(dragonBoss);
 
         // Мини-босс
-        MiniBoss miniBoss = new MiniBoss(385f + (360f - 96f) / 2, 210f + (215f - 96f) / 2);
-        bosses.add(miniBoss);
+        MiniBossFirst miniBossFirst = new MiniBossFirst(385f + (360f - 96f) / 2, 210f + (215f - 96f) / 2);
+        bosses.add(miniBossFirst);
 
         // Можно добавить обычных врагов
         // enemies.add(new Goblin(100, 100));
@@ -124,8 +123,8 @@ public class Level {
         DragonBoss iceBoss = new DragonBoss(900f, 400f);
         bosses.add(iceBoss);
 
-        MiniBoss iceMiniBoss = new MiniBoss(500f, 250f);
-        bosses.add(iceMiniBoss);
+        MiniBossFirst iceMiniBossFirst = new MiniBossFirst(500f, 250f);
+        bosses.add(iceMiniBossFirst);
 
         // Добавляем больше обычных врагов
         // enemies.add(new IceSpider(300, 200));
@@ -143,8 +142,8 @@ public class Level {
         bosses.add(finalBoss);
 
         // Множественные мини-боссы
-        MiniBoss shadowKnight1 = new MiniBoss(400f, 350f);
-        MiniBoss shadowKnight2 = new MiniBoss(600f, 200f);
+        MiniBossFirst shadowKnight1 = new MiniBossFirst(400f, 350f);
+        MiniBossFirst shadowKnight2 = new MiniBossFirst(600f, 200f);
         bosses.add(shadowKnight1);
         bosses.add(shadowKnight2);
     }

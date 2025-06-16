@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -18,7 +19,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.pixelteam.adventures.entities.HealthPotion;
 import com.pixelteam.adventures.entities.Trap;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
-import com.pixelteam.adventures.entities.enemies.MiniBoss;
+import com.pixelteam.adventures.entities.enemies.MiniBossFirst;
+import com.pixelteam.adventures.entities.enemies.MiniBossIceKnight;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
 
@@ -29,7 +31,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Player player;
     private MeleeWeapon sword;
     private DragonBoss boss;
-    private MiniBoss miniBoss;
+    private MiniBossFirst miniBossFirst;
     private float deltaTime;
 
     // Portal variables
@@ -44,7 +46,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
-    private static final float LEVEL2_CAMERA_SCALE = 0.5f; // Scale factor for level 2 camera
+    private static final float LEVEL2_CAMERA_SCALE = 0.3f; // Scale factor for level 2 camera
     private static final float LEVEL2_PLAYER_SCALE = 0.25f; // Scale factor for level 2 player
     private float viewportWidth;
     private float viewportHeight;
@@ -77,6 +79,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private static final float GAME_OVER_DELAY = 2f; // 2 seconds delay
     private Texture gameOverTexture;
     private boolean showGameOver = false;
+
+    private MiniBossIceKnight miniBossIceKnight;
 
     @Override
     public void create() {
@@ -124,12 +128,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Створення міні-боса в середній кімнаті
         float miniBossX = 385f + (360f - 96f) / 2; // Центр середньої кімнати мінус половина розміру міні-боса
         float miniBossY = 210f + (215f - 96f) / 2; // Центр середньої кімнати мінус половина розміру міні-боса
-        miniBoss = new MiniBoss(miniBossX, miniBossY);
-        miniBoss.setTarget(player);
+        miniBossFirst = new MiniBossFirst(miniBossX, miniBossY);
+        miniBossFirst.setTarget(player);
 
         // Add bosses to player's list for collision detection
         player.addBoss(boss);
-        player.addBoss(miniBoss);
+        player.addBoss(miniBossFirst);
 
         trapTexture = new Texture(Gdx.files.internal("images/other/trap.png"));
         traps = new ArrayList<>();
@@ -171,16 +175,16 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Завантаження текстури міні-боса
         if (Gdx.files.internal("images/monsters/mini_boss_1.png").exists()) {
             Texture miniBossTexture = new Texture(Gdx.files.internal("images/monsters/mini_boss_1.png"));
-            miniBoss.setTexture(miniBossTexture);
+            miniBossFirst.setTexture(miniBossTexture);
         } else if (Gdx.files.internal("images/enemies/mini_boss.png").exists()) {
             Texture miniBossTexture = new Texture(Gdx.files.internal("images/enemies/mini_boss.png"));
-            miniBoss.setTexture(miniBossTexture);
+            miniBossFirst.setTexture(miniBossTexture);
         } else if (Gdx.files.internal("images/enemies/orc.png").exists()) {
             Texture miniBossTexture = new Texture(Gdx.files.internal("images/enemies/orc.png"));
-            miniBoss.setTexture(miniBossTexture);
+            miniBossFirst.setTexture(miniBossTexture);
         } else {
             // Використовуємо текстуру гравця як заглушку для міні-боса
-            miniBoss.setTexture(playerTexture);
+            miniBossFirst.setTexture(playerTexture);
         }
 
         // Завантаження зброї головного боса
@@ -199,14 +203,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Завантаження зброї міні-боса
         if (Gdx.files.internal("images/weapons/monster_sword.png").exists()) {
             MeleeWeapon miniBossWeapon = new MeleeWeapon("Mini Boss Weapon", 20, 1.0f, "images/weapons/monster_sword.png");
-            miniBoss.equipWeapon(miniBossWeapon);
+            miniBossFirst.equipWeapon(miniBossWeapon);
         } else if (Gdx.files.internal("images/weapons/axe.png").exists()) {
             MeleeWeapon miniBossWeapon = new MeleeWeapon("Mini Boss Axe", 20, 1.0f, "images/weapons/axe.png");
-            miniBoss.equipWeapon(miniBossWeapon);
+            miniBossFirst.equipWeapon(miniBossWeapon);
         } else {
             // Використовуємо звичайний меч як заглушку
             MeleeWeapon miniBossWeapon = new MeleeWeapon("Mini Boss Weapon", 20, 1.0f, "images/weapons/sword.png");
-            miniBoss.equipWeapon(miniBossWeapon);
+            miniBossFirst.equipWeapon(miniBossWeapon);
         }
 
         // Pixel perfect налаштування
@@ -285,8 +289,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
 
         // Оновлення міні-боса тільки якщо гравець живий
-        if (miniBoss != null && miniBoss.isAlive() && player.isAlive()) {
-            miniBoss.update(deltaTime, player);
+        if (miniBossFirst != null && miniBossFirst.isAlive() && player.isAlive()) {
+            miniBossFirst.update(deltaTime, player);
         }
 
         // Перевірка колізій тільки якщо гравець живий
@@ -297,7 +301,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
 
             // Перевірка колізії між гравцем та міні-босом
-            if (miniBoss != null && miniBoss.isAlive()) {
+            if (miniBossFirst != null && miniBossFirst.isAlive()) {
                 checkPlayerMiniBossCollision();
             }
 
@@ -437,6 +441,16 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         }
 
+        // Update Ice Knight mini-boss
+        if (isLevel2 && miniBossIceKnight != null && miniBossIceKnight.isAlive() && player.isAlive()) {
+            miniBossIceKnight.update(deltaTime, player);
+        }
+
+        // Check collision with Ice Knight mini-boss
+        if (isLevel2 && player.isAlive() && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
+            checkPlayerIceKnightCollision();
+        }
+
         // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
         player.render(batch);
 
@@ -446,12 +460,17 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
 
         // Рендеринг міні-боса
-        if (miniBoss != null && miniBoss.isAlive()) {
-            miniBoss.render(batch);
+        if (miniBossFirst != null && miniBossFirst.isAlive()) {
+            miniBossFirst.render(batch);
         }
 
         // Рендеринг смужки здоров'я гравця завжди (навіть якщо мертвий, щоб показати 0 HP)
         player.renderHealthBar(batch);
+
+        // Render Ice Knight mini-boss
+        if (isLevel2 && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
+            miniBossIceKnight.render(batch);
+        }
 
         batch.end();
     }
@@ -484,17 +503,17 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     private void checkPlayerMiniBossCollision() {
         // Перевіряємо колізію тільки якщо обидва живі
-        if (!player.isAlive() || !miniBoss.isAlive()) return;
+        if (!player.isAlive() || !miniBossFirst.isAlive()) return;
 
-        if (player.getBounds().overlaps(miniBoss.getBounds())) {
+        if (player.getBounds().overlaps(miniBossFirst.getBounds())) {
             // Розрахунок вектора відштовхування
             Vector2 playerCenter = new Vector2(
                 player.getPosition().x + player.getWidth() / 2,
                 player.getPosition().y + player.getHeight() / 2
             );
             Vector2 miniBossCenter = new Vector2(
-                miniBoss.getPosition().x + miniBoss.getWidth() / 2,
-                miniBoss.getPosition().y + miniBoss.getHeight() / 2
+                miniBossFirst.getPosition().x + miniBossFirst.getWidth() / 2,
+                miniBossFirst.getPosition().y + miniBossFirst.getHeight() / 2
             );
 
             Vector2 pushDirection = playerCenter.sub(miniBossCenter).nor();
@@ -505,6 +524,48 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
             // Додаткова перевірка меж після відштовхування
             player.checkBounds();
+        }
+    }
+
+    private void checkPlayerIceKnightCollision() {
+        if (player != null && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
+            // Перевіряємо колізію з тілом боса
+            if (player.getBounds().overlaps(miniBossIceKnight.getBounds())) {
+                // Відштовхуємо гравця від боса
+                float pushX = player.getPosition().x - miniBossIceKnight.getPosition().x;
+                float pushY = player.getPosition().y - miniBossIceKnight.getPosition().y;
+                float length = (float) Math.sqrt(pushX * pushX + pushY * pushY);
+                if (length > 0) {
+                    pushX = pushX / length * 20f;
+                    pushY = pushY / length * 20f;
+                    player.getPosition().add(pushX, pushY);
+                    player.checkBounds();
+                }
+            }
+
+            // Перевіряємо колізію зі зброєю боса
+            Rectangle weaponBounds = miniBossIceKnight.getBossWeaponBounds();
+            if (weaponBounds != null && player.getBounds().overlaps(weaponBounds)) {
+                // Перевіряємо чи активний кулдаун на отримання шкоди
+                if (player.getDamageCooldown() <= 0) {
+                    if (miniBossIceKnight.isAttacking()) {
+                        // Перевіряємо чи гравець знаходиться в правильному напрямку від боса
+                        boolean isPlayerInAttackDirection = false;
+                        if (miniBossIceKnight.isFacingLeft()) {
+                            // Якщо бос дивиться вліво, гравець має бути зліва від боса
+                            isPlayerInAttackDirection = player.getPosition().x < miniBossIceKnight.getPosition().x;
+                        } else {
+                            // Якщо бос дивиться вправо, гравець має бути справа від боса
+                            isPlayerInAttackDirection = player.getPosition().x > miniBossIceKnight.getPosition().x;
+                        }
+
+                        if (isPlayerInAttackDirection) {
+                            player.takeDamage(15);
+                            player.setDamageCooldown(1.0f);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -529,10 +590,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             if (boss.getWeapon() != null) boss.getWeapon().dispose();
             boss.dispose(); // Виклик dispose для боса
         }
-        if (miniBoss != null) {
-            if (miniBoss.getTexture() != null) miniBoss.getTexture().dispose();
-            if (miniBoss.getWeapon() != null) miniBoss.getWeapon().dispose();
-            miniBoss.dispose(); // Виклик dispose для міні-боса
+        if (miniBossFirst != null) {
+            if (miniBossFirst.getTexture() != null) miniBossFirst.getTexture().dispose();
+            if (miniBossFirst.getWeapon() != null) miniBossFirst.getWeapon().dispose();
+            miniBossFirst.dispose(); // Виклик dispose для міні-боса
         }
         // Dispose portal texture
         if (portalTexture != null) portalTexture.dispose();
@@ -557,6 +618,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (gameOverTexture != null) {
             gameOverTexture.dispose();
         }
+
+        if (miniBossIceKnight != null) {
+            if (miniBossIceKnight.getTexture() != null) miniBossIceKnight.getTexture().dispose();
+            if (miniBossIceKnight.getWeapon() != null) miniBossIceKnight.getWeapon().dispose();
+            miniBossIceKnight.dispose();
+        }
     }
 
     public void setLevel2() {
@@ -564,6 +631,38 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.setLevel2Areas();
         player.setScale(LEVEL2_PLAYER_SCALE);
         player.setPosition(new Vector2(100, 100));
-        potions.clear(); // Очищаємо зілля при переході на 2 рівень
+        potions.clear();
+
+        // Create and initialize Ice Knight mini-boss
+        float iceKnightX = 385f + (360f - 80f) / 2; // Center of middle room minus half of mini-boss size (80f)
+        float iceKnightY = 210f + (215f - 80f) / 2; // Center of middle room minus half of mini-boss size (80f)
+        miniBossIceKnight = new MiniBossIceKnight(iceKnightX, iceKnightY);
+        miniBossIceKnight.setTarget(player);
+
+        // Load Ice Knight texture
+        if (Gdx.files.internal("images/monsters/mini_boss_2.png").exists()) {
+            Texture iceKnightTexture = new Texture(Gdx.files.internal("images/monsters/mini_boss_2.png"));
+            miniBossIceKnight.setTexture(iceKnightTexture);
+        } else if (Gdx.files.internal("images/enemies/mini_boss_2.png").exists()) {
+            Texture iceKnightTexture = new Texture(Gdx.files.internal("images/enemies/mini_boss_2.png"));
+            miniBossIceKnight.setTexture(iceKnightTexture);
+        } else {
+            // Use player texture as fallback and scale it to match the boss size
+            Texture fallbackTexture = player.getTexture();
+            miniBossIceKnight.setTexture(fallbackTexture);
+        }
+
+        // Load Ice Knight weapon
+        if (Gdx.files.internal("images/weapons/miniboss2weapon.png").exists()) {
+            MeleeWeapon iceKnightWeapon = new MeleeWeapon("Ice Knight Weapon", 25, 1.0f, "images/weapons/miniboss2weapon.png");
+            miniBossIceKnight.equipWeapon(iceKnightWeapon);
+        } else {
+            // Use regular sword as fallback
+            MeleeWeapon iceKnightWeapon = new MeleeWeapon("Ice Knight Weapon", 25, 1.0f, "images/weapons/sword.png");
+            miniBossIceKnight.equipWeapon(iceKnightWeapon);
+        }
+
+        // Add Ice Knight to player's boss list for collision detection
+        player.addBoss(miniBossIceKnight);
     }
 }

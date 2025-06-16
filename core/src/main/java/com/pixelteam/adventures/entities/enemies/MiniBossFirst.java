@@ -8,7 +8,7 @@ import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.utils.Stats;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
 
-public class MiniBoss extends Boss {
+public class MiniBossFirst extends Boss {
     private static final float MINI_BOSS_SIZE = 70f; // Менший розмір ніж головний босс
     private static final int MINI_BOSS_HEALTH = 250;
     private static final float MINI_BOSS_SPEED = 75f; // Швидший за головного боса
@@ -102,7 +102,7 @@ public class MiniBoss extends Boss {
         }
     }
 
-    public MiniBoss(float x, float y) {
+    public MiniBossFirst(float x, float y) {
         // Ініціалізуємо базові параметри
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0, 0);

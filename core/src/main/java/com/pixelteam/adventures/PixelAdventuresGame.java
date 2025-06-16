@@ -19,12 +19,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.pixelteam.adventures.entities.HealthPotion;
 import com.pixelteam.adventures.entities.Trap;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
+import com.pixelteam.adventures.entities.enemies.IceBoss;
 import com.pixelteam.adventures.entities.enemies.IceSpirit;
 import com.pixelteam.adventures.entities.enemies.MiniBossFirst;
 import com.pixelteam.adventures.entities.enemies.MiniBossIceKnight;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
-import com.pixelteam.adventures.entities.enemies.IceBoss;
 
 
 public class PixelAdventuresGame extends ApplicationAdapter {
@@ -48,8 +48,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
-    private static final float LEVEL2_CAMERA_SCALE = 0.6f; // Scale factor for level 2 camera
-    public static final float LEVEL2_PLAYER_SCALE = 0.45f; // Scale factor for level 2 player
+    private static final float LEVEL2_CAMERA_SCALE = 0.5f; // Scale factor for level 2 camera
+    public static final float LEVEL2_PLAYER_SCALE = 0.25f; // Scale factor for level 2 player
     private float viewportWidth;
     private float viewportHeight;
 
@@ -88,7 +88,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private List<IceSpirit> iceSpirits;
     private Texture iceSpiritTexture;
     private float iceSpiritSpawnTimer;
-    private static final float ICE_SPIRIT_SPAWN_INTERVAL = 0.5f;
+    private static final float ICE_SPIRIT_SPAWN_INTERVAL = 1f;
     private int iceSpiritsSpawned;
     private static final int MAX_ICE_SPIRITS = 5;
 
@@ -484,21 +484,23 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (iceSpirits != null && iceSpiritsSpawned < MAX_ICE_SPIRITS) {
             // Check if player is in room 2
             boolean isPlayerInRoom2 = false;
-            for (Rectangle area : player.getPlayableAreas()) {
-                if (area.x == 513.32f + 16.25f && // Room 2 coordinates
-                    area.y == 24.01f + 22.1f &&
-                    player.getBounds().overlaps(area)) {
-                    isPlayerInRoom2 = true;
-                    break;
-                }
+            Rectangle room2Bounds = new Rectangle(
+                513.32f + 16.25f,  // x
+                24.01f,            // y
+                235.62f - 16.25f,  // width
+                89.04f            // height
+            );
+            
+            if (player.getBounds().overlaps(room2Bounds)) {
+                isPlayerInRoom2 = true;
             }
 
             if (isPlayerInRoom2) {
                 iceSpiritSpawnTimer += deltaTime;
                 if (iceSpiritSpawnTimer >= ICE_SPIRIT_SPAWN_INTERVAL) {
                     // Spawn position in room 2 (bottom-left corner)
-                    float spawnX = 513.32f + 12.5f; // Room 2 x + PLAYER_WIDTH
-                    float spawnY = 16.01f + 17.0f;  // Room 2 y + PLAYER_HEIGHT
+                    float spawnX = 513.32f + 16.25f; // Room 2 x + PLAYER_WIDTH
+                    float spawnY = 24.01f;  // Room 2 y
 
                     IceSpirit spirit = new IceSpirit(spawnX, spawnY);
                     spirit.setTexture(iceSpiritTexture);

@@ -13,7 +13,7 @@ public class IceBoss extends Boss {
     // the boss to miniboss ratio on level 1 (128f / 70f)
     private static final float BOSS_SIZE = 50f;
     private static final int BOSS_HEALTH = 600;
-    private static final float BOSS_SPEED = 50f;
+    private static final float BOSS_SPEED = 25f;
     private static final float ATTACK_RANGE = 150f;
     private static final float ATTACK_COOLDOWN = 5.0f;
     private static final float WEAPON_SWING_COOLDOWN = 5.0f; // Махання зброєю раз на секунду
@@ -307,7 +307,7 @@ public class IceBoss extends Boss {
         if (weapon == null || weapon.getTexture() == null) return;
 
         // Розмір зброї (масштабуємо для боса)
-        float weaponWidth = (float) (weapon.getWidth() * 0.5f);
+        float weaponWidth = (float) (weapon.getWidth() * 0.25f);
         float weaponHeight = (float) (weapon.getHeight() * 0.5f);
 
         float offsetX;
@@ -332,7 +332,7 @@ public class IceBoss extends Boss {
             weaponX, weaponY,
             weaponWidth / 2.0f, weaponHeight / 2.0f,
             weaponWidth, weaponHeight,
-            1.0f, 1.0f,
+            0.5f, 1.0f,
             totalRotation,
             0, 0,
             weapon.getTexture().getWidth(), weapon.getTexture().getHeight(),
@@ -420,14 +420,13 @@ public class IceBoss extends Boss {
         if (damageCooldown <= 0) {
             health -= damage;
 
-            // Increment sword hit counter
-            swordHitCount++;
+
 
             // Set cooldown to prevent multiple hits in a single attack
             damageCooldown = 0.5f; // Half a second cooldown
 
             // Die after 5 sword hits or when health reaches 0
-            if (swordHitCount >= 5 || health <= 0) {
+            if ( health <= 0) {
                 die();
             }
         }

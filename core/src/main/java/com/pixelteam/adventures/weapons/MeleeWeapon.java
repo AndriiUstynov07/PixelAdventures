@@ -48,9 +48,13 @@ public class MeleeWeapon extends Weapon {
 
         // Set dimensions based on loaded texture, or use defaults
         if (this.texture != null) {
-
-            this.width = 30;
-            this.height = 48;
+            if (this.level == 2) {
+                this.width = 10;
+                this.height = 20;
+            } else {
+                this.width = 30;
+                this.height = 48;
+            }
         }
 
         this.range = 100;
@@ -132,5 +136,78 @@ public class MeleeWeapon extends Weapon {
      */
     public float getAttackRotation() {
         return attackRotation;
+    }
+
+    // Getters and Setters
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDamage(int damage) {
+        this.damage = damage;
+    }
+
+    public float getAttackSpeed() {
+        return attackSpeed;
+    }
+
+    public void setAttackSpeed(float attackSpeed) {
+        this.attackSpeed = attackSpeed;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+        // Update dimensions when level changes
+        if (this.level == 2) {
+            this.width = 10;
+            this.height = 20;
+        } else {
+            this.width = 30;
+            this.height = 48;
+        }
+    }
+
+    public WeaponType getType() {
+        return type;
+    }
+
+    public void setType(WeaponType type) {
+        this.type = type;
+    }
+
+    public void setTexture(Texture texture) {
+        this.texture = texture;
+    }
+
+    public void setRange(float range) {
+        this.range = range;
+    }
+
+    public void setSwingAngle(float swingAngle) {
+        this.swingAngle = swingAngle;
+    }
+
+    public void setAttacking(boolean attacking) {
+        this.attacking = attacking;
+    }
+
+    public void setAttackRotation(float attackRotation) {
+        this.attackRotation = attackRotation;
+    }
+
+    public void setAttackTimer(float attackTimer) {
+        this.attackTimer = attackTimer;
+    }
+
+    public float getAttackTimer() {
+        return attackTimer;
     }
 }

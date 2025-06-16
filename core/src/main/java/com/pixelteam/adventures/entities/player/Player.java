@@ -115,53 +115,53 @@ public class Player extends Character {
     private void initializeLevel2PlayableAreas() {
         playableAreas.clear();
 
-        final float PLAYER_WIDTH = (float) (12.5f*1.3);
-        final float PLAYER_HEIGHT = (float) (17.0f*1.3);
+        final float PLAYER_WIDTH = (float) (12.5f);
+        final float PLAYER_HEIGHT = (float) (17.0f);
 
         // Room 1
         playableAreas.add(new Rectangle(
             950.17f + PLAYER_WIDTH,
             45.91f + PLAYER_HEIGHT,
             96.69f - PLAYER_WIDTH,
-            63.86f - PLAYER_HEIGHT
+            63.86f
         ));
 
         // Passage 1 (горизонтальний)
         playableAreas.add(new Rectangle(
             678.805f,
-            65.74f + PLAYER_HEIGHT,
+            65.74f ,
             344.9f,
-            21.65f - PLAYER_HEIGHT
+            21.65f
         ));
 
         // Room 2
         playableAreas.add(new Rectangle(
             513.32f + PLAYER_WIDTH,
-            24.01f + PLAYER_HEIGHT,
+            24.01f ,
             235.62f - PLAYER_WIDTH,
-            89.04f - PLAYER_HEIGHT
+            89.04f
         ));
 
         // Passage 2
         playableAreas.add(new Rectangle(
             237.92f,
-            65.94f + PLAYER_HEIGHT,
+            65.94f ,
             343.24f,
-            20.04f - PLAYER_HEIGHT
+            20.04f
         ));
 
         // Room 3
         playableAreas.add(new Rectangle(
             216.16f + PLAYER_WIDTH,
-            37.38f + PLAYER_HEIGHT,
+            37.38f ,
             90.88f - PLAYER_WIDTH,
-            71.71f - PLAYER_HEIGHT
+            71.71f
         ));
 
         // Passage 3 (вертикальний)
         playableAreas.add(new Rectangle(
             623.25f,
-            78.015f + PLAYER_HEIGHT,
+            78.015f + PLAYER_WIDTH ,
             26.78f,
             174.94f - PLAYER_HEIGHT
         ));
@@ -169,31 +169,31 @@ public class Player extends Character {
         // Room 4
         playableAreas.add(new Rectangle(
             513.89f + PLAYER_WIDTH,
-            224.16f + PLAYER_HEIGHT,
+            224.16f ,
             235.81f - PLAYER_WIDTH,
-            162.53f - PLAYER_HEIGHT
+            162.53f
         ));
 
         // Passage 4
         playableAreas.add(new Rectangle(
             252.63f,
-            293.11f + PLAYER_HEIGHT,
+            293.11f ,
             324.64f,
-            25.13f - PLAYER_HEIGHT
+            25.13f
         ));
 
         // Room 5
         playableAreas.add(new Rectangle(
             190.37f + PLAYER_WIDTH,
-            238.34f + PLAYER_HEIGHT,
+            238.34f,
             143.16f - PLAYER_WIDTH,
-            120.62f - PLAYER_HEIGHT
+            120.62f
         ));
 
         // Passage 5 (вертикальний)
         playableAreas.add(new Rectangle(
             622.79f,
-            299.17f + PLAYER_HEIGHT,
+            299.17f + PLAYER_WIDTH ,
             27.63f,
             411.4f - PLAYER_HEIGHT
         ));
@@ -201,9 +201,9 @@ public class Player extends Character {
         // Room 6
         playableAreas.add(new Rectangle(
             580.76f + PLAYER_WIDTH,
-            625.40f + PLAYER_HEIGHT,
+            625.40f ,
             100.86f - PLAYER_WIDTH,
-            57.40f - PLAYER_HEIGHT
+            57.40f
         ));
     }
 
@@ -343,30 +343,30 @@ public class Player extends Character {
     private Rectangle getBossWeaponBounds(Boss boss) {
         if (boss.getWeapon() == null) return null;
 
-        // Розраховуємо позицію зброї боса (аналогічно до DragonBoss.renderWeapon)
-        float weaponWidth = boss.getWeapon().getWidth();
-        float weaponHeight = boss.getWeapon().getHeight();
+        // Розраховуємо позицію зброї боса
+        float weaponWidth = boss.getWeapon().getWidth() * 0.5f;  // Зменшуємо розмір зброї
+        float weaponHeight = boss.getWeapon().getHeight() * 0.5f;
 
         float offsetX;
         float offsetY;
 
         if (boss.isFacingLeft()) {
-            offsetX = -54.0f;
-            offsetY = -15.0f;
+            offsetX = -27.0f;
+            offsetY = -7.0f;
         } else {
-            offsetX = 62.0f;
-            offsetY = -15.0f;
+            offsetX = 27.0f;
+            offsetY = -7.0f;
         }
 
         float weaponX = boss.getPosition().x + boss.getWidth() / 2.0f + offsetX - weaponWidth / 2.0f;
         float weaponY = boss.getPosition().y + boss.getHeight() / 2.0f + offsetY - weaponHeight / 2.0f;
 
-        // Створюємо хітбокс зброї (трохи більший для кращого попадання)
+        // Створюємо менший хітбокс зброї
         return new Rectangle(
-            weaponX - 10,
-            weaponY - 10,
-            weaponWidth + 20,
-            weaponHeight + 20
+            weaponX - 5,  // Зменшуємо розширення хітбокса
+            weaponY - 5,
+            weaponWidth + 10,  // Зменшуємо розширення хітбокса
+            weaponHeight + 10
         );
     }
     public void render(SpriteBatch batch) {

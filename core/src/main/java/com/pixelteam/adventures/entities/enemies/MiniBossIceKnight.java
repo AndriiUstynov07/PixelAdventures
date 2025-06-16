@@ -11,7 +11,7 @@ import com.pixelteam.adventures.weapons.MeleeWeapon;
 public class MiniBossIceKnight extends Boss {
     private static final float MINI_BOSS_SIZE = 35f;
     private static final int MINI_BOSS_HEALTH = 250;
-    private static final float MINI_BOSS_SPEED = 75f;
+    private static final float MINI_BOSS_SPEED = 35f;
     private static final float ATTACK_RANGE = 50f;
     private static final float ATTACK_COOLDOWN = 1.5f;
     private static final float WEAPON_SWING_COOLDOWN = 0.8f;
@@ -308,7 +308,7 @@ public class MiniBossIceKnight extends Boss {
     private void renderWeapon(SpriteBatch batch) {
         if (weapon == null || weapon.getTexture() == null) return;
 
-        float weaponWidth = weapon.getWidth() * 0.35f;
+        float weaponWidth = weapon.getWidth() * 0.17f;
         float weaponHeight = weapon.getHeight() * 0.35f;
 
         float offsetX;
@@ -332,7 +332,7 @@ public class MiniBossIceKnight extends Boss {
             weaponX, weaponY,
             weaponWidth / 2.0f, weaponHeight / 2.0f,
             weaponWidth, weaponHeight,
-            1.0f, 1.0f,
+            0.5f, 1.0f,
             totalRotation,
             0, 0,
             weapon.getTexture().getWidth(), weapon.getTexture().getHeight(),

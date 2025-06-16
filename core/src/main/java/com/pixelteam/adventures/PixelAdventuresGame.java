@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.pixelteam.adventures.entities.HealthPotion;
 import com.pixelteam.adventures.entities.Trap;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
+import com.pixelteam.adventures.entities.enemies.IceSpirit;
 import com.pixelteam.adventures.entities.enemies.MiniBossFirst;
 import com.pixelteam.adventures.entities.enemies.MiniBossIceKnight;
 import com.pixelteam.adventures.entities.player.Player;
@@ -81,6 +82,13 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private boolean showGameOver = false;
 
     private MiniBossIceKnight miniBossIceKnight;
+
+    private List<IceSpirit> iceSpirits;
+    private Texture iceSpiritTexture;
+    private float iceSpiritSpawnTimer;
+    private static final float ICE_SPIRIT_SPAWN_INTERVAL = 0.5f;
+    private int iceSpiritsSpawned;
+    private static final int MAX_ICE_SPIRITS = 5;
 
     @Override
     public void create() {
@@ -249,6 +257,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         map2Texture = new Texture(Gdx.files.internal("images/environment/tiles/map2.png"));
 
         font = new BitmapFont();
+
+        // Load ice spirit texture
+        if (Gdx.files.internal("images/monsters/icespirit.png").exists()) {
+            iceSpiritTexture = new Texture(Gdx.files.internal("images/monsters/icespirit.png"));
+        } else {
+            // Use a fallback texture if the ice spirit texture is not found
+            iceSpiritTexture = new Texture(Gdx.files.internal("images/player/player.png"));
+        }
     }
 
     @Override
@@ -451,6 +467,56 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             checkPlayerIceKnightCollision();
         }
 
+        // Update ice spirit spawn timer and spawn new spirits
+        if (iceSpirits != null && iceSpiritsSpawned < MAX_ICE_SPIRITS) {
+            // Check if player is in room 2
+            boolean isPlayerInRoom2 = false;
+            for (Rectangle area : player.getPlayableAreas()) {
+                if (area.x == 513.32f + 12.5f && // Room 2 coordinates
+                    area.y == 16.01f + 17.0f &&
+                    player.getBounds().overlaps(area)) {
+                    isPlayerInRoom2 = true;
+                    break;
+                }
+            }
+
+            if (isPlayerInRoom2) {
+                iceSpiritSpawnTimer += deltaTime;
+                if (iceSpiritSpawnTimer >= ICE_SPIRIT_SPAWN_INTERVAL) {
+                    // Spawn position in room 2 (bottom-left corner)
+                    float spawnX = 513.32f + 12.5f; // Room 2 x + PLAYER_WIDTH
+                    float spawnY = 16.01f + 17.0f;  // Room 2 y + PLAYER_HEIGHT
+                    
+                    IceSpirit spirit = new IceSpirit(spawnX, spawnY);
+                    spirit.setTexture(iceSpiritTexture);
+                    spirit.setTarget(player);
+                    iceSpirits.add(spirit);
+                    
+                    iceSpiritSpawnTimer = 0f;
+                    iceSpiritsSpawned++;
+                }
+            }
+        }
+
+        // Update and render ice spirits
+        if (iceSpirits != null) {
+            for (IceSpirit spirit : iceSpirits) {
+                if (spirit.isAlive()) {
+                    spirit.update(deltaTime);
+                    spirit.render(batch);
+                    spirit.checkPlayerCollision(player);
+
+                    // Check if player's weapon hits the spirit
+                    if (player.isAttacking() && player.getWeapon() != null) {
+                        Rectangle weaponBounds = player.getWeaponBounds();
+                        if (weaponBounds != null && weaponBounds.overlaps(spirit.getBounds())) {
+                            spirit.takeDamage(1); // One hit kill
+                        }
+                    }
+                }
+            }
+        }
+
         // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
         player.render(batch);
 
@@ -531,38 +597,34 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (player != null && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
             // Перевіряємо колізію з тілом боса
             if (player.getBounds().overlaps(miniBossIceKnight.getBounds())) {
-                // Відштовхуємо гравця від боса
-                float pushX = player.getPosition().x - miniBossIceKnight.getPosition().x;
-                float pushY = player.getPosition().y - miniBossIceKnight.getPosition().y;
-                float length = (float) Math.sqrt(pushX * pushX + pushY * pushY);
-                if (length > 0) {
-                    pushX = pushX / length * 20f;
-                    pushY = pushY / length * 20f;
-                    player.getPosition().add(pushX, pushY);
-                    player.checkBounds();
-                }
+                // Розрахунок вектора відштовхування
+                Vector2 playerCenter = new Vector2(
+                    player.getPosition().x + player.getWidth() / 2,
+                    player.getPosition().y + player.getHeight() / 2
+                );
+                Vector2 bossCenter = new Vector2(
+                    miniBossIceKnight.getPosition().x + miniBossIceKnight.getWidth() / 2,
+                    miniBossIceKnight.getPosition().y + miniBossIceKnight.getHeight() / 2
+                );
+
+                Vector2 pushDirection = playerCenter.sub(bossCenter).nor();
+
+                // Відштовхуємо гравця від боса з урахуванням масштабу
+                float pushDistance = 5.0f * LEVEL2_PLAYER_SCALE;
+                player.getPosition().add(pushDirection.scl(pushDistance));
+
+                // Додаткова перевірка меж після відштовхування
+                player.checkBounds();
             }
 
             // Перевіряємо колізію зі зброєю боса
             Rectangle weaponBounds = miniBossIceKnight.getBossWeaponBounds();
             if (weaponBounds != null && player.getBounds().overlaps(weaponBounds)) {
-                // Перевіряємо чи активний кулдаун на отримання шкоди
-                if (player.getDamageCooldown() <= 0) {
-                    if (miniBossIceKnight.isAttacking()) {
-                        // Перевіряємо чи гравець знаходиться в правильному напрямку від боса
-                        boolean isPlayerInAttackDirection = false;
-                        if (miniBossIceKnight.isFacingLeft()) {
-                            // Якщо бос дивиться вліво, гравець має бути зліва від боса
-                            isPlayerInAttackDirection = player.getPosition().x < miniBossIceKnight.getPosition().x;
-                        } else {
-                            // Якщо бос дивиться вправо, гравець має бути справа від боса
-                            isPlayerInAttackDirection = player.getPosition().x > miniBossIceKnight.getPosition().x;
-                        }
-
-                        if (isPlayerInAttackDirection) {
-                            player.takeDamage(15);
-                            player.setDamageCooldown(1.0f);
-                        }
+                if (miniBossIceKnight.isAttacking() && player.getDamageCooldown() <= 0) {
+                    MeleeWeapon weapon = miniBossIceKnight.getWeapon();
+                    if (weapon != null) {
+                        player.takeDamage(weapon.getDamage());
+                        player.setDamageCooldown(1.0f);
                     }
                 }
             }
@@ -624,6 +686,15 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             if (miniBossIceKnight.getWeapon() != null) miniBossIceKnight.getWeapon().dispose();
             miniBossIceKnight.dispose();
         }
+
+        if (iceSpirits != null) {
+            for (IceSpirit spirit : iceSpirits) {
+                spirit.dispose();
+            }
+        }
+        if (iceSpiritTexture != null) {
+            iceSpiritTexture.dispose();
+        }
     }
 
     public void setLevel2() {
@@ -634,8 +705,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         potions.clear();
 
         // Create and initialize Ice Knight mini-boss
-        float iceKnightX = 385f + (360f - 80f) / 2; // Center of middle room minus half of mini-boss size (80f)
-        float iceKnightY = 210f + (215f - 80f) / 2; // Center of middle room minus half of mini-boss size (80f)
+        float iceKnightX = 385f + (360f - 80f) / 2;
+        float iceKnightY = 210f + (215f - 80f) / 2;
         miniBossIceKnight = new MiniBossIceKnight(iceKnightX, iceKnightY);
         miniBossIceKnight.setTarget(player);
 
@@ -664,5 +735,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Add Ice Knight to player's boss list for collision detection
         player.addBoss(miniBossIceKnight);
+
+        // Initialize ice spirits list and spawn timer
+        iceSpirits = new ArrayList<>();
+        iceSpiritSpawnTimer = 0f;
+        iceSpiritsSpawned = 0;
     }
 }

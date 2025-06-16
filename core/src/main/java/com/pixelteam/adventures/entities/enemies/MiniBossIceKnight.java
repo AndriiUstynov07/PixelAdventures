@@ -344,12 +344,10 @@ public class MiniBossIceKnight extends Boss {
 
         float distanceToPlayer = position.dst(target.getPosition());
         if (distanceToPlayer <= ATTACK_RANGE) {
-            target.takeDamage(15);
-        }
-
-        if (weapon != null) {
-            weapon.startAttack();
-            isAttacking = true;
+            if (weapon != null) {
+                weapon.startAttack();
+                isAttacking = true;
+            }
         }
     }
 
@@ -409,43 +407,28 @@ public class MiniBossIceKnight extends Boss {
     public Rectangle getBossWeaponBounds() {
         if (weapon == null || weapon.getTexture() == null) return null;
 
-        float weaponWidth = weapon.getWidth() * 0.7f;
-        float weaponHeight = weapon.getHeight() * 0.7f;
+        float weaponWidth = weapon.getWidth() * 0.3f;
+        float weaponHeight = weapon.getHeight() * 0.3f;
 
         float offsetX;
         float offsetY;
-        float totalRotation;
 
         if (facingLeft) {
-            offsetX = -27.0f;
-            offsetY = -7.0f;
-            totalRotation = weaponRotation + weaponAttackAnimation;
+            offsetX = -20.0f;
+            offsetY = -5.0f;
         } else {
-            offsetX = 27.0f;
-            offsetY = -7.0f;
-            totalRotation = weaponRotation - weaponAttackAnimation;
+            offsetX = 20.0f;
+            offsetY = -5.0f;
         }
 
         float weaponX = position.x + width / 2.0f + offsetX - weaponWidth / 2.0f;
         float weaponY = position.y + height / 2.0f + offsetY - weaponHeight / 2.0f;
 
-        float hitboxMargin = 5f;
-        float attackMultiplier = isAttacking ? 1.1f : 1.0f;
-
-        float cos = (float) Math.cos(Math.toRadians(totalRotation));
-        float sin = (float) Math.sin(Math.toRadians(totalRotation));
-
-        float centerX = weaponX + weaponWidth / 2;
-        float centerY = weaponY + weaponHeight / 2;
-
-        float rotatedWidth = Math.abs(weaponWidth * cos) + Math.abs(weaponHeight * sin);
-        float rotatedHeight = Math.abs(weaponWidth * sin) + Math.abs(weaponHeight * cos);
-
         return new Rectangle(
-            centerX - rotatedWidth / 2 - hitboxMargin * attackMultiplier,
-            centerY - rotatedHeight / 2 - hitboxMargin * attackMultiplier,
-            rotatedWidth + 2 * hitboxMargin * attackMultiplier,
-            rotatedHeight + 2 * hitboxMargin * attackMultiplier
+            weaponX,
+            weaponY,
+            weaponWidth,
+            weaponHeight
         );
     }
 
@@ -459,8 +442,9 @@ public class MiniBossIceKnight extends Boss {
         velocity.set(0, 0);
         
         if (target != null) {
-            Vector2 pushDirection = new Vector2(target.getPosition()).sub(position).nor();
-            target.getPosition().add(pushDirection.scl(20f));
+            Rectangle playerBounds = target.getBounds();
+            Vector2 pushDirection = new Vector2(playerBounds.x + playerBounds.width / 2 - position.x, playerBounds.y + playerBounds.height / 2 - position.y).nor();
+            target.getPosition().add(pushDirection.scl(5f));
         }
     }
 

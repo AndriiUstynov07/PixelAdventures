@@ -27,6 +27,7 @@ public class Player extends Character {
     private boolean facingLeft;
     private static Texture pixelTexture;
     private float damageCooldown; // Кулдаун для запобігання багаторазовому отриманню шкоди
+    private Weapon weapon;
     private static final float DAMAGE_COOLDOWN_TIME = 1.0f; // 1 секунда захисту після отримання шкоди
 
     // Межі ігрового поля (кімнати та коридори)
@@ -306,7 +307,7 @@ public class Player extends Character {
             this.swordAttackAnimation += 1600.0F * deltaTime;
 
             // Check for boss attacks during the entire attack animation
-            if (this.currentWeapon != null) {
+            if (this.weapon != null) {
                 checkBossAttack();
             }
 
@@ -389,7 +390,7 @@ public class Player extends Character {
         }
 
         // Малюємо зброю, тільки якщо гравець живий і має зброю
-        if (this.alive && this.currentWeapon != null) {
+        if (this.alive && this.weapon != null) {
             float offsetX;
             float offsetY;
             float totalRotation;
@@ -404,10 +405,10 @@ public class Player extends Character {
                 totalRotation = this.swordRotation - this.swordAttackAnimation;
             }
 
-            float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
-            float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
+            float swordX = this.position.x + this.width / 2.0F + offsetX - this.weapon.getWidth() / 2.0F;
+            float swordY = this.position.y + this.height / 2.0F + offsetY - this.weapon.getHeight() / 2.0F;
 
-            this.currentWeapon.render(batch, swordX, swordY, totalRotation);
+            this.weapon.render(batch, swordX, swordY, totalRotation);
         }
         // Дуже важливо: повертаємо колір batch на повну непрозорість (білий)
         // після малювання гравця та зброї, щоб не впливати на інші об'єкти.
@@ -424,12 +425,12 @@ public class Player extends Character {
     }
 
     public void attack() {
-        if (this.attackCooldown <= 0.0F && this.currentWeapon != null) {
+        if (this.attackCooldown <= 0.0F && this.weapon != null) {
             this.isAttacking = true;
             this.swordAttackAnimation = 0.0F;
             this.attackCooldown = 0.5F;
             Vector2 target = new Vector2((float)Gdx.input.getX(), (float)(Gdx.graphics.getHeight() - Gdx.input.getY()));
-            this.currentWeapon.attack(this, target);
+            this.weapon.attack(this, target);
 
             // Перевіряємо чи атакуємо боса
             checkBossAttack();
@@ -452,21 +453,21 @@ public class Player extends Character {
             totalRotation = this.swordRotation - this.swordAttackAnimation;
         }
 
-        float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
-        float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
+        float swordX = this.position.x + this.width / 2.0F + offsetX - this.weapon.getWidth() / 2.0F;
+        float swordY = this.position.y + this.height / 2.0F + offsetY - this.weapon.getHeight() / 2.0F;
 
         // Create a larger hitbox for the sword to make collision detection more forgiving
         Rectangle swordHitbox = new Rectangle(
             swordX - 10, // Expand hitbox by 10 pixels on each side
             swordY - 10,
-            this.currentWeapon.getWidth() + 20,
-            this.currentWeapon.getHeight() + 20
+            this.weapon.getWidth() + 20,
+            this.weapon.getHeight() + 20
         );
 
         // Check collision with bosses
         for (Boss boss : bosses) {
             if (boss.isAlive() && boss.getBounds().overlaps(swordHitbox)) {
-                boss.takeDamage(this.currentWeapon.getDamage());
+                boss.takeDamage(this.weapon.getDamage());
             }
         }
     }
@@ -482,8 +483,10 @@ public class Player extends Character {
 
     public void takeDamage(int damage) {
         if (!this.alive) return; // Не отримуємо шкоди якщо вже мертві
+        if (this.damageCooldown > 0) return; // Не отримуємо шкоди під час кулдауну
 
         this.health -= damage;
+        this.damageCooldown = DAMAGE_COOLDOWN_TIME; // Встановлюємо кулдаун
         System.out.println("Player took " + damage + " damage. Health: " + this.health + "/" + this.maxHealth);
 
         if (this.health <= 0) {
@@ -554,7 +557,7 @@ public class Player extends Character {
     }
 
     public void equipWeapon(Weapon weapon) {
-        this.currentWeapon = weapon;
+        this.weapon = weapon;
     }
 
     public void equipArmor(Armor armor) {
@@ -659,7 +662,7 @@ public class Player extends Character {
     }
 
     public Weapon getWeapon() {
-        return this.currentWeapon;
+        return this.weapon;
     }
 
     public float getDamageCooldown() {
@@ -668,5 +671,33 @@ public class Player extends Character {
 
     public void setDamageCooldown(float cooldown) {
         this.damageCooldown = cooldown;
+    }
+
+    public Rectangle getWeaponBounds() {
+        if (weapon == null || !isAttacking) return null;
+
+        float weaponWidth = weapon.getWidth() * 0.3f;
+        float weaponHeight = weapon.getHeight() * 0.3f;
+
+        float offsetX;
+        float offsetY;
+
+        if (facingLeft) {
+            offsetX = -20.0f;
+            offsetY = -5.0f;
+        } else {
+            offsetX = 20.0f;
+            offsetY = -5.0f;
+        }
+
+        float weaponX = position.x + width / 2.0f + offsetX - weaponWidth / 2.0f;
+        float weaponY = position.y + height / 2.0f + offsetY - weaponHeight / 2.0f;
+
+        return new Rectangle(
+            weaponX,
+            weaponY,
+            weaponWidth,
+            weaponHeight
+        );
     }
 }

@@ -19,12 +19,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.pixelteam.adventures.entities.HealthPotion;
 import com.pixelteam.adventures.entities.Trap;
 import com.pixelteam.adventures.entities.enemies.DragonBoss;
-import com.pixelteam.adventures.entities.enemies.IceBoss;
 import com.pixelteam.adventures.entities.enemies.IceSpirit;
 import com.pixelteam.adventures.entities.enemies.MiniBossFirst;
 import com.pixelteam.adventures.entities.enemies.MiniBossIceKnight;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
+import com.pixelteam.adventures.entities.enemies.IceBoss;
 
 
 public class PixelAdventuresGame extends ApplicationAdapter {
@@ -48,8 +48,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
-    private static final float LEVEL2_CAMERA_SCALE = 0.5f; // Scale factor for level 2 camera
-    public static final float LEVEL2_PLAYER_SCALE = 0.25f; // Scale factor for level 2 player
+    private static final float LEVEL2_CAMERA_SCALE = 0.6f; // Scale factor for level 2 camera
+    public static final float LEVEL2_PLAYER_SCALE = 0.45f; // Scale factor for level 2 player
     private float viewportWidth;
     private float viewportHeight;
 
@@ -94,9 +94,9 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private List<IceSpirit> iceSpirits;
     private Texture iceSpiritTexture;
     private float iceSpiritSpawnTimer;
-    private static final float ICE_SPIRIT_SPAWN_INTERVAL = 1f;
+    private static final float ICE_SPIRIT_SPAWN_INTERVAL = 1.3f;
     private int iceSpiritsSpawned;
-    private static final int MAX_ICE_SPIRITS = 5;
+    private static final int MAX_ICE_SPIRITS = 7;
 
     @Override
     public void create() {
@@ -104,40 +104,37 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Load loading screen resources
         try {
-            loadingTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/loadingscreen.png"));
+                loadingTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/loadingscreen.png"));
             System.out.println("Loading screen texture loaded successfully");
         } catch (Exception e) {
             System.out.println("Error loading loading screen texture: " + e.getMessage());
             e.printStackTrace();
         }
-
         loadingFont = new BitmapFont();
         loadingFont.getData().setScale(2f);
 
         // Load game over screen
         try {
-            gameOverTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/gameoverscreen.png"));
+                gameOverTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/gameoverscreen.png"));
             System.out.println("Game over screen texture loaded successfully");
         } catch (Exception e) {
             System.out.println("Error loading game over screen texture: " + e.getMessage());
             e.printStackTrace();
         }
-
-        // Load map textures
+        // Завантаження фонового зображення
         try {
-            backgroundTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/map1.png"));
+                backgroundTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/map1.png"));
             System.out.println("Map1 texture loaded successfully");
-            
+
             map2Texture = new Texture(Gdx.files.internal("assets/images/environment/tiles/map2.png"));
             System.out.println("Map2 texture loaded successfully");
-            
+
             map3Texture = new Texture(Gdx.files.internal("assets/images/environment/tiles/map3.PNG"));
             System.out.println("Map3 texture loaded successfully");
         } catch (Exception e) {
             System.out.println("Error loading map textures: " + e.getMessage());
             e.printStackTrace();
         }
-
         // Завантаження текстури гравця
         Texture playerTexture = null;
         try {
@@ -155,7 +152,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (playerTexture != null) {
             player.setTexture(playerTexture);
         }
-
         // Створення меча
         if (Gdx.files.internal("images/weapons/sword.png").exists()) {
             sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
@@ -272,13 +268,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Load portal texture
         try {
-            portalTexture = new Texture(Gdx.files.internal("assets/images/environment/decorations/portal.png"));
+                portalTexture = new Texture(Gdx.files.internal("assets/images/environment/decorations/portal.png"));
             System.out.println("Portal texture loaded successfully from: assets/images/environment/decorations/portal.png");
         } catch (Exception e) {
             System.out.println("Error loading portal texture: " + e.getMessage());
             e.printStackTrace();
         }
-
         // Set portal position in the middle of the right room
         portalPosition.x = 835f + (310f - 120f) / 2; // Center of right room minus half of portal width
         portalPosition.y = 260f + (165f - 220f) / 2; // Center of right room minus half of portal height
@@ -523,14 +518,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             checkPlayerIceKnightCollision();
         }
 
-        // Check if both bosses are dead and show portal
-        if (isLevel2 && !isLevel3 && iceBoss != null && miniBossIceKnight != null && 
-            !iceBoss.isAlive() && !miniBossIceKnight.isAlive() && !showLevel2Portal) {
+        // Check if both bosses are dead and show portalAdd commentMore actions
+        if (isLevel2 && !isLevel3 && iceBoss != null && miniBossIceKnight != null &&
+                !iceBoss.isAlive() && !miniBossIceKnight.isAlive() && !showLevel2Portal) {
             showLevel2Portal = true;
             // Set portal position at the ice boss location
             level2PortalPosition.set(iceBoss.getPosition());
             System.out.println("Portal should appear at: " + level2PortalPosition); // Debug message
-            
+
             // Reload portal texture if it was disposed
             if (portalTexture == null) {
                 try {
@@ -573,9 +568,9 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
                 // Reset camera position to player
                 camera.position.set(
-                    player.getPosition().x + player.getWidth() / 2,
-                    player.getPosition().y + player.getHeight() / 2,
-                    0
+                        player.getPosition().x + player.getWidth() / 2,
+                        player.getPosition().y + player.getHeight() / 2,
+                        0
                 );
             }
         }
@@ -607,23 +602,43 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (iceSpirits != null && iceSpiritsSpawned < MAX_ICE_SPIRITS) {
             // Check if player is in room 2
             boolean isPlayerInRoom2 = false;
-            Rectangle room2Bounds = new Rectangle(
-                513.32f + 16.25f,  // x
-                24.01f,            // y
-                235.62f - 16.25f,  // width
-                89.04f            // height
-            );
-            
-            if (player.getBounds().overlaps(room2Bounds)) {
-                isPlayerInRoom2 = true;
+            boolean isPlayerInRoom5 = false;
+            for (Rectangle area : player.getPlayableAreas()) {
+                if (area.x == 513.32f + 16.25f && // Room 2 coordinates
+                    area.y == 24.01f + 22.1f &&
+                    player.getBounds().overlaps(area)) {
+                    isPlayerInRoom2 = true;
+                    break;
+                }
+                if (area.x == 190.37f + 16.25f && // Room 2 coordinates
+                        area.y == 238.34f + 22.1f &&
+                        player.getBounds().overlaps(area)) {
+                    isPlayerInRoom5 = true;
+                    break;
+                }
             }
 
             if (isPlayerInRoom2) {
                 iceSpiritSpawnTimer += deltaTime;
                 if (iceSpiritSpawnTimer >= ICE_SPIRIT_SPAWN_INTERVAL) {
                     // Spawn position in room 2 (bottom-left corner)
-                    float spawnX = 513.32f + 16.25f; // Room 2 x + PLAYER_WIDTH
-                    float spawnY = 24.01f;  // Room 2 y
+                    float spawnX = 513.32f + 12.5f; // Room 2 x + PLAYER_WIDTH
+                    float spawnY = 16.01f + 17.0f;  // Room 2 y + PLAYER_HEIGHT
+
+                    IceSpirit spirit = new IceSpirit(spawnX, spawnY);
+                    spirit.setTexture(iceSpiritTexture);
+                    spirit.setTarget(player);
+                    iceSpirits.add(spirit);
+
+                    iceSpiritSpawnTimer = 0f;
+                    iceSpiritsSpawned++;
+                }
+            }
+            if (isPlayerInRoom5) {
+                iceSpiritSpawnTimer += deltaTime;
+                if (iceSpiritSpawnTimer >= ICE_SPIRIT_SPAWN_INTERVAL) {
+                    float spawnX = 190.37f + 12.5f; // Room 2 x + PLAYER_WIDTH
+                    float spawnY = 238.34f + 17.0f;  // Room 2 y + PLAYER_HEIGHT
 
                     IceSpirit spirit = new IceSpirit(spawnX, spawnY);
                     spirit.setTexture(iceSpiritTexture);
@@ -897,8 +912,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.setScale(LEVEL2_PLAYER_SCALE);
         player.setPosition(new Vector2(100, 100));
         player.restoreFullHealth();
-        player.setSpeed(4000f);
+        player.setSpeed(100000f);
         potions.clear();
+        potions.add(new HealthPotion(260f, 70f, 20, 100, potionTexture));
+        potions.add(new HealthPotion(260f, 300f, 20, 100, potionTexture));
 
         // Create and initialize Ice Boss in room 6
         float iceBossX = 580.76f + (100.86f - 64f) / 2f;
@@ -957,7 +974,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.addBoss(miniBossIceKnight);
         player.addBoss(iceBoss);
 
-
         // Initialize ice spirits list and spawn timer
         iceSpirits = new ArrayList<>();
         iceSpiritSpawnTimer = 0f;
@@ -975,43 +991,51 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         traps.add(new Trap(corridorX, startY, trapSize, 70, trapTexture));
         traps.add(new Trap(corridorX+30f, startY + gap, trapSize, 70, trapTexture));
         traps.add(new Trap(corridorX, startY + 2 * gap, trapSize, 70, trapTexture));
+
+        float corridor2X = 237.92f;
+        float corridor2Y = 65.94f;
+        float gap2 = 50f;
+
+        traps.add(new Trap(corridor2X+4*gap2, corridor2Y-7f, trapSize, 70, trapTexture));
+        traps.add(new Trap(corridor2X+3*gap2, corridor2Y+15f, trapSize, 70, trapTexture));
+        traps.add(new Trap(corridor2X+2*gap2, corridor2Y-7f, trapSize, 70, trapTexture));
     }
 
     public void setLevel3() {
         isLevel3 = true;
         isLevel2 = false;
-        
+
         // Set level 3 background
         backgroundTexture = map3Texture;
         System.out.println("Switching to level 3 background");
-        
+
         // Set player position for level 3
         player.getPosition().set(level3PlayerSpawn);
         System.out.println("Player position set to: " + level3PlayerSpawn);
-        
+
         // Set level 3 playable areas to cover the entire map
         player.setLevel3Areas();
-        
+
         // Apply level 2 scale to player and camera
         player.setScale(LEVEL2_PLAYER_SCALE);
         if (player.getWeapon() != null) {
             player.getWeapon().setScale(LEVEL2_PLAYER_SCALE);
         }
         player.setHealthBarScale(LEVEL2_PLAYER_SCALE);
-        
+
         // Apply level 2 camera scale
         viewportWidth = worldWidth * 0.412f * LEVEL2_CAMERA_SCALE;
         viewportHeight = worldHeight * 0.412f * LEVEL2_CAMERA_SCALE;
         viewport.setWorldSize(viewportWidth, viewportHeight);
         viewport.apply();
-        
+
         // Reset camera position to player
         camera.position.set(
-            player.getPosition().x + player.getWidth() / 2,
-            player.getPosition().y + player.getHeight() / 2,
-            0
+                player.getPosition().x + player.getWidth() / 2,
+                player.getPosition().y + player.getHeight() / 2,
+                0
         );
-        
+
         // Clear all level 2 entities
         traps.clear();
         potions.clear();
@@ -1019,7 +1043,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             iceSpirits.clear();
         }
         iceSpiritsSpawned = 0;
-        
+
         // Reset portal state
         showLevel2Portal = false;
         canEnterLevel2Portal = false;
@@ -1027,7 +1051,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             portalTexture.dispose();
             portalTexture = null;
         }
-        
+
         System.out.println("Level 3 transition completed");
     }
 }

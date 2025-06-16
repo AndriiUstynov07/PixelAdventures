@@ -9,15 +9,13 @@ import com.pixelteam.adventures.utils.Stats;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
 
 public class MiniBossIceKnight extends Boss {
-    private static final float MINI_BOSS_SIZE = 35f; // Reduced from 105f to 80f
-    private static final int MINI_BOSS_HEALTH = 300;
-    private static final float MINI_BOSS_SPEED = 40f;
-    private static final float ATTACK_RANGE = 5f; // Reduced from 50f to 30f to 20f to 10f and now to 5f to make boss deal damage at even shorter distance
+    private static final float MINI_BOSS_SIZE = 35f;
+    private static final int MINI_BOSS_HEALTH = 250;
+    private static final float MINI_BOSS_SPEED = 75f;
+    private static final float ATTACK_RANGE = 50f;
     private static final float ATTACK_COOLDOWN = 1.5f;
     private static final float WEAPON_SWING_COOLDOWN = 0.8f;
     private static final float COLLISION_STUN_DURATION = 0.1f;
-    private static final float MOVE_INTERVAL = 1.0f; // 1 second moving
-    private static final float PAUSE_INTERVAL = 0.25f; // 0.25 seconds pause
 
     private float attackTimer;
     private Player target;
@@ -36,15 +34,12 @@ public class MiniBossIceKnight extends Boss {
 
     private float collisionStunTimer;
     private boolean isStunnedFromCollision;
-    private float moveTimer;
-    private boolean isMoving;
 
     public MiniBossIceKnight(float x, float y) {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0, 0);
         this.width = MINI_BOSS_SIZE;
         this.height = MINI_BOSS_SIZE;
-        System.out.println("Ice Knight size: " + this.width + "x" + this.height);
         this.health = MINI_BOSS_HEALTH;
         this.maxHealth = MINI_BOSS_HEALTH;
         this.speed = MINI_BOSS_SPEED;
@@ -69,8 +64,6 @@ public class MiniBossIceKnight extends Boss {
 
         this.collisionStunTimer = 0f;
         this.isStunnedFromCollision = false;
-        this.moveTimer = 0f;
-        this.isMoving = true;
     }
 
     @Override
@@ -80,24 +73,104 @@ public class MiniBossIceKnight extends Boss {
         } else {
             if (!alive || !active) return;
 
-            updateTimers(deltaTime);
+            if (attackTimer > 0) {
+                attackTimer -= deltaTime;
+            }
+
+            if (damageCooldown > 0) {
+                damageCooldown -= deltaTime;
+            }
+
+            if (weaponSwingTimer > 0) {
+                weaponSwingTimer -= deltaTime;
+            }
+
+            if (collisionStunTimer > 0) {
+                collisionStunTimer -= deltaTime;
+                if (collisionStunTimer <= 0) {
+                    isStunnedFromCollision = false;
+                }
+            }
+
             updateWeaponAnimation(deltaTime);
-            updateWeapon(deltaTime);
-            updatePosition(deltaTime);
+
+            if (weapon != null) {
+                weapon.update(deltaTime);
+            }
+
+            if (!isStunnedFromCollision) {
+                position.add(velocity.x * deltaTime, velocity.y * deltaTime);
+            }
+
             constrainToRoom();
         }
     }
 
-    private void updateTimers(float deltaTime) {
-        if (attackTimer > 0) attackTimer -= deltaTime;
-        if (damageCooldown > 0) damageCooldown -= deltaTime;
-        if (weaponSwingTimer > 0) weaponSwingTimer -= deltaTime;
+    @Override
+    public void move(Vector2 direction) {
+        if (!alive || !active || isStunnedFromCollision) return;
+
+        velocity.set(direction).nor().scl(speed);
+
+        if (direction.x < 0) {
+            facingLeft = true;
+        } else if (direction.x > 0) {
+            facingLeft = false;
+        }
+    }
+
+    public void update(float deltaTime, Player player) {
+        if (!alive || !active) return;
+
+        this.target = player;
+        this.phaseTimer += deltaTime;
+
+        if (health <= maxHealth * 0.6f && phase == 1) {
+            changePhase();
+        }
+
+        if (attackTimer > 0) {
+            attackTimer -= deltaTime;
+        }
+
+        if (damageCooldown > 0) {
+            damageCooldown -= deltaTime;
+        }
+
         if (collisionStunTimer > 0) {
             collisionStunTimer -= deltaTime;
             if (collisionStunTimer <= 0) {
                 isStunnedFromCollision = false;
             }
         }
+
+        if (weaponSwingTimer > 0) {
+            weaponSwingTimer -= deltaTime;
+        } else {
+            if (weapon != null) {
+                weapon.startAttack();
+                isAttacking = true;
+                weaponSwingTimer = WEAPON_SWING_COOLDOWN;
+            }
+        }
+
+        updateWeaponAnimation(deltaTime);
+
+        if (weapon != null) {
+            weapon.update(deltaTime);
+        }
+
+        if (!isStunnedFromCollision) {
+            updateAI(deltaTime);
+        } else {
+            velocity.set(0, 0);
+        }
+
+        if (!isStunnedFromCollision) {
+            position.add(velocity.x * deltaTime, velocity.y * deltaTime);
+        }
+
+        constrainToRoom();
     }
 
     private void updateWeaponAnimation(float deltaTime) {
@@ -119,68 +192,27 @@ public class MiniBossIceKnight extends Boss {
         }
     }
 
-    private void updateWeapon(float deltaTime) {
-        if (weapon != null) {
-            weapon.update(deltaTime);
-        }
-    }
-
-    private void updatePosition(float deltaTime) {
-        if (!isStunnedFromCollision) {
-            position.add(velocity.x * deltaTime, velocity.y * deltaTime);
-        }
-    }
-
-
-    public void update(float deltaTime, Player player) {
-        if (!alive || !active) return;
-
-        this.target = player;
-        this.phaseTimer += deltaTime;
-
-        updateTimers(deltaTime);
-        updateWeaponAnimation(deltaTime);
-        updateWeapon(deltaTime);
-
-        if (!isStunnedFromCollision) {
-            updateAI(deltaTime);
-        } else {
-            velocity.set(0, 0);
-        }
-
-        updatePosition(deltaTime);
-        constrainToRoom();
-    }
-
     private void updateAI(float deltaTime) {
         if (target == null) return;
 
         float distanceToPlayer = position.dst(target.getPosition());
 
         if (isPlayerInRoom()) {
-            moveTimer += deltaTime;
-
-            if (isMoving) {
-                if (moveTimer >= MOVE_INTERVAL) {
-                    isMoving = false;
-                    moveTimer = 0f;
-                    velocity.set(0, 0);
-                } else if (distanceToPlayer > ATTACK_RANGE) {
-                    moveTowardsPlayer();
-                }
+            if (distanceToPlayer > ATTACK_RANGE) {
+                moveTowardsPlayer();
+                isMovingTowardsPlayer = true;
             } else {
-                if (moveTimer >= PAUSE_INTERVAL) {
-                    isMoving = true;
-                    moveTimer = 0f;
-                }
-            }
+                velocity.set(0, 0);
+                isMovingTowardsPlayer = false;
 
-            if (distanceToPlayer <= ATTACK_RANGE && attackTimer <= 0) {
-                attack();
-                attackTimer = ATTACK_COOLDOWN;
+                if (attackTimer <= 0) {
+                    attack();
+                    attackTimer = ATTACK_COOLDOWN;
+                }
             }
         } else {
             moveToRoomCenter();
+            isMovingTowardsPlayer = false;
         }
 
         if (phaseTimer > 2.5f) {
@@ -257,19 +289,6 @@ public class MiniBossIceKnight extends Boss {
         }
     }
 
-    @Override
-    public void move(Vector2 direction) {
-        if (!alive || !active || isStunnedFromCollision) return;
-
-        velocity.set(direction).nor().scl(speed);
-
-        if (direction.x < 0) {
-            facingLeft = true;
-        } else if (direction.x > 0) {
-            facingLeft = false;
-        }
-    }
-
     public void render(SpriteBatch batch) {
         if (texture != null && alive) {
             if (facingLeft) {
@@ -289,8 +308,8 @@ public class MiniBossIceKnight extends Boss {
     private void renderWeapon(SpriteBatch batch) {
         if (weapon == null || weapon.getTexture() == null) return;
 
-        float weaponWidth = weapon.getWidth() * 0.5f;
-        float weaponHeight = weapon.getHeight() * 0.5f;
+        float weaponWidth = weapon.getWidth() * 0.35f;
+        float weaponHeight = weapon.getHeight() * 0.35f;
 
         float offsetX;
         float offsetY;
@@ -344,6 +363,8 @@ public class MiniBossIceKnight extends Boss {
 
         float distanceToPlayer = position.dst(target.getPosition());
         if (distanceToPlayer <= ATTACK_RANGE) {
+            target.takeDamage(15);
+
             if (weapon != null) {
                 weapon.startAttack();
                 isAttacking = true;
@@ -395,7 +416,7 @@ public class MiniBossIceKnight extends Boss {
     }
 
     public Rectangle getBounds() {
-        float collisionMargin = 5f; // Reduced from 20f to make collision area larger
+        float collisionMargin = 5f;
         return new Rectangle(
             position.x + collisionMargin,
             position.y + collisionMargin,
@@ -407,18 +428,18 @@ public class MiniBossIceKnight extends Boss {
     public Rectangle getBossWeaponBounds() {
         if (weapon == null || weapon.getTexture() == null) return null;
 
-        float weaponWidth = weapon.getWidth() * 0.2f;
-        float weaponHeight = weapon.getHeight() * 0.2f;
+        float weaponWidth = weapon.getWidth() * 0.35f;
+        float weaponHeight = weapon.getHeight() * 0.35f;
 
         float offsetX;
         float offsetY;
 
         if (facingLeft) {
-            offsetX = -10.0f;
-            offsetY = -2.5f;
+            offsetX = -13.5f;
+            offsetY = -3.5f;
         } else {
-            offsetX = 10.0f;
-            offsetY = -2.5f;
+            offsetX = 13.5f;
+            offsetY = -3.5f;
         }
 
         float weaponX = position.x + width / 2.0f + offsetX - weaponWidth / 2.0f;
@@ -440,8 +461,6 @@ public class MiniBossIceKnight extends Boss {
         collisionStunTimer = COLLISION_STUN_DURATION;
         isStunnedFromCollision = true;
         velocity.set(0, 0);
-
-        // Removed the code that pushes the player away
     }
 
     public void equipWeapon(MeleeWeapon weapon) {
@@ -486,10 +505,6 @@ public class MiniBossIceKnight extends Boss {
 
     public boolean isFacingLeft() {
         return this.facingLeft;
-    }
-
-    public boolean isStunnedFromCollision() {
-        return this.isStunnedFromCollision;
     }
 
     private Texture getPixelTexture() {

@@ -609,10 +609,25 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
                 // Calculate distance between player and boss
                 float distance = player.getPosition().dst(miniBossIceKnight.getPosition());
-                float minDamageDistance = 50f; // Мінімальна відстань для нанесення урону
+                float minDamageDistance = 15f; // Зменшено до 15f для більш точного визначення дистанції
 
-                if (miniBossIceKnight.isAttacking() && player.getDamageCooldown() <= 0 && 
-                    isFacingPlayer && distance <= minDamageDistance) {
+                // Додаткова перевірка, чи гравець дійсно знаходиться в зоні атаки
+                boolean isInAttackRange = distance <= minDamageDistance && 
+                                        Math.abs(player.getPosition().y - miniBossIceKnight.getPosition().y) < 10f;
+
+                // Перевіряємо, чи зброя дійсно знаходиться в правильній позиції для атаки
+                boolean isWeaponInAttackPosition = false;
+                if (miniBossIceKnight.isFacingLeft()) {
+                    isWeaponInAttackPosition = weaponBounds.x < miniBossIceKnight.getPosition().x;
+                } else {
+                    isWeaponInAttackPosition = weaponBounds.x > miniBossIceKnight.getPosition().x;
+                }
+
+                if (miniBossIceKnight.isAttacking() && 
+                    player.getDamageCooldown() <= 0 && 
+                    isFacingPlayer && 
+                    isInAttackRange && 
+                    isWeaponInAttackPosition) {
                     MeleeWeapon weapon = miniBossIceKnight.getWeapon();
                     if (weapon != null) {
                         player.takeDamage(weapon.getDamage());

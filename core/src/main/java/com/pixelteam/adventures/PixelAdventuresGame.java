@@ -597,30 +597,22 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (player != null && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
             // Перевіряємо колізію з тілом боса
             if (player.getBounds().overlaps(miniBossIceKnight.getBounds())) {
-                // Розрахунок вектора відштовхування
-                Vector2 playerCenter = new Vector2(
-                    player.getPosition().x + player.getWidth() / 2,
-                    player.getPosition().y + player.getHeight() / 2
-                );
-                Vector2 bossCenter = new Vector2(
-                    miniBossIceKnight.getPosition().x + miniBossIceKnight.getWidth() / 2,
-                    miniBossIceKnight.getPosition().y + miniBossIceKnight.getHeight() / 2
-                );
-
-                Vector2 pushDirection = playerCenter.sub(bossCenter).nor();
-
-                // Відштовхуємо гравця від боса з урахуванням масштабу
-                float pushDistance = 5.0f * LEVEL2_PLAYER_SCALE;
-                player.getPosition().add(pushDirection.scl(pushDistance));
-
-                // Додаткова перевірка меж після відштовхування
-                player.checkBounds();
+                // Викликаємо метод обробки колізії у боса
+                miniBossIceKnight.onCollisionWithPlayer();
             }
 
             // Перевіряємо колізію зі зброєю боса
             Rectangle weaponBounds = miniBossIceKnight.getBossWeaponBounds();
             if (weaponBounds != null && player.getBounds().overlaps(weaponBounds)) {
-                if (miniBossIceKnight.isAttacking() && player.getDamageCooldown() <= 0) {
+                // Check if the boss is facing the player
+                boolean isFacingPlayer = isBossFacingPlayer(miniBossIceKnight, player);
+
+                // Calculate distance between player and boss
+                float distance = player.getPosition().dst(miniBossIceKnight.getPosition());
+                float minDamageDistance = 50f; // Мінімальна відстань для нанесення урону
+
+                if (miniBossIceKnight.isAttacking() && player.getDamageCooldown() <= 0 && 
+                    isFacingPlayer && distance <= minDamageDistance) {
                     MeleeWeapon weapon = miniBossIceKnight.getWeapon();
                     if (weapon != null) {
                         player.takeDamage(weapon.getDamage());
@@ -695,6 +687,24 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (iceSpiritTexture != null) {
             iceSpiritTexture.dispose();
         }
+    }
+
+    // Helper method to check if the boss is facing the player
+    private boolean isBossFacingPlayer(MiniBossIceKnight boss, Player player) {
+        // Get the positions of the boss and player
+        Vector2 bossPosition = boss.getPosition();
+        Vector2 playerPosition = player.getPosition();
+
+        // Check if the boss is facing left or right
+        boolean isBossFacingLeft = boss.isFacingLeft();
+
+        // Determine if the player is to the left or right of the boss
+        boolean isPlayerToLeft = playerPosition.x < bossPosition.x;
+
+        // The boss is facing the player if:
+        // - The boss is facing left AND the player is to the left of the boss, OR
+        // - The boss is NOT facing left AND the player is NOT to the left of the boss
+        return (isBossFacingLeft && isPlayerToLeft) || (!isBossFacingLeft && !isPlayerToLeft);
     }
 
     public void setLevel2() {

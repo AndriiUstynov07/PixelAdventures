@@ -12,7 +12,7 @@ public class MiniBossIceKnight extends Boss {
     private static final float MINI_BOSS_SIZE = 35f; // Reduced from 105f to 80f
     private static final int MINI_BOSS_HEALTH = 300;
     private static final float MINI_BOSS_SPEED = 40f;
-    private static final float ATTACK_RANGE = 50f;
+    private static final float ATTACK_RANGE = 5f; // Reduced from 50f to 30f to 20f to 10f and now to 5f to make boss deal damage at even shorter distance
     private static final float ATTACK_COOLDOWN = 1.5f;
     private static final float WEAPON_SWING_COOLDOWN = 0.8f;
     private static final float COLLISION_STUN_DURATION = 0.1f;
@@ -395,7 +395,7 @@ public class MiniBossIceKnight extends Boss {
     }
 
     public Rectangle getBounds() {
-        float collisionMargin = 20f;
+        float collisionMargin = 5f; // Reduced from 20f to make collision area larger
         return new Rectangle(
             position.x + collisionMargin,
             position.y + collisionMargin,
@@ -407,8 +407,8 @@ public class MiniBossIceKnight extends Boss {
     public Rectangle getBossWeaponBounds() {
         if (weapon == null || weapon.getTexture() == null) return null;
 
-        float weaponWidth = weapon.getWidth() * 0.3f;
-        float weaponHeight = weapon.getHeight() * 0.3f;
+        float weaponWidth = weapon.getWidth() * 0.2f;
+        float weaponHeight = weapon.getHeight() * 0.2f;
 
         float offsetX;
         float offsetY;
@@ -441,11 +441,7 @@ public class MiniBossIceKnight extends Boss {
         isStunnedFromCollision = true;
         velocity.set(0, 0);
 
-        if (target != null) {
-            Rectangle playerBounds = target.getBounds();
-            Vector2 pushDirection = new Vector2(playerBounds.x + playerBounds.width / 2 - position.x, playerBounds.y + playerBounds.height / 2 - position.y).nor();
-            target.getPosition().add(pushDirection.scl(5f));
-        }
+        // Removed the code that pushes the player away
     }
 
     public void equipWeapon(MeleeWeapon weapon) {

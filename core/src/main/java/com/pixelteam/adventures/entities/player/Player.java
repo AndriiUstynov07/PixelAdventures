@@ -115,95 +115,95 @@ public class Player extends Character {
     private void initializeLevel2PlayableAreas() {
         playableAreas.clear();
 
-        final float PLAYER_WIDTH = (float) (12.5f*1.3);
-        final float PLAYER_HEIGHT = (float) (17.0f*1.3);
+        final float PLAYER_WIDTH = (float) (12.5f);
+        final float PLAYER_HEIGHT = (float) (17.0f);
 
         // Room 1
         playableAreas.add(new Rectangle(
             950.17f + PLAYER_WIDTH,
             45.91f + PLAYER_HEIGHT,
             96.69f - PLAYER_WIDTH,
-            63.86f - PLAYER_HEIGHT
+            63.86f
         ));
 
         // Passage 1 (горизонтальний)
         playableAreas.add(new Rectangle(
             678.805f,
-            65.74f + PLAYER_HEIGHT,
+            65.74f ,
             344.9f,
-            21.65f - PLAYER_HEIGHT
+            21.65f
         ));
 
         // Room 2
         playableAreas.add(new Rectangle(
             513.32f + PLAYER_WIDTH,
-            24.01f + PLAYER_HEIGHT,
+            24.01f ,
             235.62f - PLAYER_WIDTH,
-            89.04f - PLAYER_HEIGHT
+            89.04f
         ));
 
         // Passage 2
         playableAreas.add(new Rectangle(
             237.92f,
-            65.94f + PLAYER_HEIGHT,
+            65.94f ,
             343.24f,
-            20.04f - PLAYER_HEIGHT
+            20.04f
         ));
 
         // Room 3
         playableAreas.add(new Rectangle(
             216.16f + PLAYER_WIDTH,
-            37.38f + PLAYER_HEIGHT,
+            37.38f ,
             90.88f - PLAYER_WIDTH,
-            71.71f - PLAYER_HEIGHT
+            71.71f
         ));
 
         // Passage 3 (вертикальний)
         playableAreas.add(new Rectangle(
             623.25f,
-            78.015f + PLAYER_HEIGHT,
-            24.78f,
+            78.015f + PLAYER_WIDTH ,
+            26.78f,
             174.94f - PLAYER_HEIGHT
         ));
 
         // Room 4
         playableAreas.add(new Rectangle(
             513.89f + PLAYER_WIDTH,
-            224.16f + PLAYER_HEIGHT,
+            224.16f ,
             235.81f - PLAYER_WIDTH,
-            162.53f - PLAYER_HEIGHT
+            162.53f
         ));
 
         // Passage 4
         playableAreas.add(new Rectangle(
             252.63f,
-            293.11f + PLAYER_HEIGHT,
+            293.11f ,
             324.64f,
-            25.13f - PLAYER_HEIGHT
+            25.13f
         ));
 
         // Room 5
         playableAreas.add(new Rectangle(
             190.37f + PLAYER_WIDTH,
-            238.34f + PLAYER_HEIGHT,
+            238.34f,
             143.16f - PLAYER_WIDTH,
-            120.62f - PLAYER_HEIGHT
+            120.62f
         ));
 
         // Passage 5 (вертикальний)
         playableAreas.add(new Rectangle(
             622.79f,
-            299.17f + PLAYER_HEIGHT,
-            25.63f,
+            299.17f + PLAYER_WIDTH ,
+            27.63f,
             411.4f - PLAYER_HEIGHT
         ));
 
         // Room 6
         playableAreas.add(new Rectangle(
             580.76f + PLAYER_WIDTH,
-            625.40f + PLAYER_HEIGHT,
+            625.40f ,
             100.86f - PLAYER_WIDTH,
-            57.40f - PLAYER_HEIGHT
+            57.40f
         ));
     }
 
@@ -217,19 +217,132 @@ public class Player extends Character {
         initializeLevel2PlayableAreas();
 
         // Зменшуємо швидкість для 2 рівня в 3 рази
-        this.speed = 200f / 2f;
+        this.speed = 200f / 3f;
     }
 
     public void setLevel3Areas() {
         playableAreas.clear();
 
-        // Make the entire map accessible
-        playableAreas.add(new Rectangle(
+        final float PLAYER_WIDTH = 12.5f;
+        final float PLAYER_HEIGHT = 17.0f;
 
+        // Room 1 (top left)
+        playableAreas.add(new Rectangle(
+            100f + PLAYER_WIDTH,
+            500f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Room 2 (top center)
+        playableAreas.add(new Rectangle(
+            350f + PLAYER_WIDTH,
+            500f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Room 3 (top right)
+        playableAreas.add(new Rectangle(
+            600f + PLAYER_WIDTH,
+            500f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Room 4 (middle left)
+        playableAreas.add(new Rectangle(
+            100f + PLAYER_WIDTH,
+            300f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Room 5 (middle center)
+        playableAreas.add(new Rectangle(
+            350f + PLAYER_WIDTH,
+            300f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Room 6 (middle right)
+        playableAreas.add(new Rectangle(
+            600f + PLAYER_WIDTH,
+            300f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Room 7 (bottom left)
+        playableAreas.add(new Rectangle(
+            100f + PLAYER_WIDTH,
+            100f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Room 8 (bottom center)
+        playableAreas.add(new Rectangle(
+            350f + PLAYER_WIDTH,
+            100f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Room 9 (bottom right)
+        playableAreas.add(new Rectangle(
+            600f + PLAYER_WIDTH,
+            100f + PLAYER_HEIGHT,
+            150f - PLAYER_WIDTH,
+            100f - PLAYER_HEIGHT
+        ));
+
+        // Horizontal corridor 1 (connecting top rooms)
+        playableAreas.add(new Rectangle(
+            250f,
+            530f,
+            100f,
+            40f
+        ));
+
+        // Horizontal corridor 2 (connecting middle rooms)
+        playableAreas.add(new Rectangle(
+            250f,
+            330f,
+            100f,
+            40f
+        ));
+
+        // Horizontal corridor 3 (connecting bottom rooms)
+        playableAreas.add(new Rectangle(
+            250f,
+            130f,
+            100f,
+            40f
+        ));
+
+        // Vertical corridor 1 (connecting left rooms)
+        playableAreas.add(new Rectangle(
+            150f,
+            200f,
+            50f,
+            100f
+        ));
+
+        // Vertical corridor 2 (connecting right rooms)
+        playableAreas.add(new Rectangle(
+            650f,
+            200f,
+            50f,
+            100f
         ));
 
         // Set speed for level 3 (same as level 2)
-        this.speed = 200f / 2f;
+        this.speed = 200f / 3f;
+
+        // Output player coordinates to console when moving
+        System.out.println("Player position: " + this.position.x + ", " + this.position.y);
     }
 
     public void setLevel1Areas() {
@@ -289,6 +402,11 @@ public class Player extends Character {
         // Оновлюємо позицію тільки якщо гравець живий
         if (this.alive) {
             this.position.add(this.velocity.x * deltaTime, this.velocity.y * deltaTime);
+
+            // Output player coordinates to console when moving
+            if (this.velocity.x != 0 || this.velocity.y != 0) {
+                System.out.println("Player position: " + this.position.x + ", " + this.position.y);
+            }
 
             // Перевіряємо, чи нова позиція валідна
             if (!isPositionValid(this.position.x, this.position.y)) {
@@ -355,30 +473,30 @@ public class Player extends Character {
     private Rectangle getBossWeaponBounds(Boss boss) {
         if (boss.getWeapon() == null) return null;
 
-        // Розраховуємо позицію зброї боса (аналогічно до DragonBoss.renderWeapon)
-        float weaponWidth = boss.getWeapon().getWidth();
-        float weaponHeight = boss.getWeapon().getHeight();
+        // Розраховуємо позицію зброї боса
+        float weaponWidth = boss.getWeapon().getWidth() * 0.5f;  // Зменшуємо розмір зброї
+        float weaponHeight = boss.getWeapon().getHeight() * 0.5f;
 
         float offsetX;
         float offsetY;
 
         if (boss.isFacingLeft()) {
-            offsetX = -54.0f;
-            offsetY = -15.0f;
+            offsetX = -27.0f;
+            offsetY = -7.0f;
         } else {
-            offsetX = 62.0f;
-            offsetY = -15.0f;
+            offsetX = 27.0f;
+            offsetY = -7.0f;
         }
 
         float weaponX = boss.getPosition().x + boss.getWidth() / 2.0f + offsetX - weaponWidth / 2.0f;
         float weaponY = boss.getPosition().y + boss.getHeight() / 2.0f + offsetY - weaponHeight / 2.0f;
 
-        // Створюємо хітбокс зброї (трохи більший для кращого попадання)
+        // Створюємо менший хітбокс зброї
         return new Rectangle(
-            weaponX - 10,
-            weaponY - 10,
-            weaponWidth + 20,
-            weaponHeight + 20
+            weaponX - 5,  // Зменшуємо розширення хітбокса
+            weaponY - 5,
+            weaponWidth + 10,  // Зменшуємо розширення хітбокса
+            weaponHeight + 10
         );
     }
     public void render(SpriteBatch batch) {

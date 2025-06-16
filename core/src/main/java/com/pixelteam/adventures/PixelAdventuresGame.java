@@ -64,10 +64,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private static boolean isLevel2 = false;
     private static boolean isLevel3 = false;
     private Vector2 level2PlayerSpawn = new Vector2(995f, 65f); // Adjusted spawn position (770 + 50 = 820, 175 - 50 = 125)
-    private Vector2 level3PlayerSpawn = new Vector2(100f, 100f);
+    private Vector2 level3PlayerSpawn = new Vector2(1100f, 350f); // Position player directly on the portal
     private Vector2 level2PortalPosition = new Vector2();
+    private Vector2 level3PortalPosition = new Vector2(); // Fixed position for level 3 portal
     private boolean showLevel2Portal = false;
     private boolean canEnterLevel2Portal = false;
+    private boolean showLevel3Portal = true; // Додаємо змінну для відображення порталу на 3 рівні
 
     // Add getter for isLevel2
     public static boolean isLevel2() {
@@ -435,8 +437,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             potion.render(batch);
         }
 
-        // Check if DragonBoss is dead and render portal if it is
-        if (boss != null && !boss.isAlive()) {
+        // Check if DragonBoss is dead and render portal if it is (only on level 1)
+        if (boss != null && !boss.isAlive() && !isLevel3) {
             // Show portal only after DragonBoss is defeated
             showPortal = true;
         }
@@ -489,7 +491,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
 
         // Render portal if it should be shown (before player so it appears behind)
-        if (showPortal && portalTexture != null) {
+        if (showPortal && portalTexture != null && !isLevel3) {
             batch.draw(portalTexture, portalPosition.x, portalPosition.y, 120f, 220f);
 
             // Show interaction prompt if player is near portal
@@ -670,6 +672,27 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         }
 
+        // Render portal on level 3 at fixed position
+        if (isLevel3 && showLevel3Portal) {
+            if (portalTexture != null) {
+                // Scale portal dimensions for level 3
+                float portalWidth = 200f * LEVEL2_PLAYER_SCALE;
+                float portalHeight = 300f * LEVEL2_PLAYER_SCALE;
+                batch.draw(portalTexture,
+                    level3PortalPosition.x - portalWidth/2,
+                    level3PortalPosition.y - portalHeight/2,
+                    portalWidth,
+                    portalHeight
+                );
+            } else {
+                try {
+                    portalTexture = new Texture(Gdx.files.internal("assets/images/environment/decorations/portal.png"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
         player.render(batch);
 
@@ -695,6 +718,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         if (isLevel2 && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
             miniBossIceKnight.render(batch);
         }
+
 
         batch.end();
     }
@@ -1004,14 +1028,29 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     public void setLevel3() {
         isLevel3 = true;
         isLevel2 = false;
+        showPortal = false; // Ensure level 1 portal is not shown on level 3
 
         // Set level 3 background
         backgroundTexture = map3Texture;
-        System.out.println("Switching to level 3 background");
 
         // Set player position for level 3
         player.getPosition().set(level3PlayerSpawn);
-        System.out.println("Player position set to: " + level3PlayerSpawn);
+
+        // Set fixed position for level 3 portal to be at the same position as player spawn
+        level3PortalPosition.set(level3PlayerSpawn.x, level3PlayerSpawn.y); // Portal at the same position as player spawn
+
+        // Load portal texture if needed
+        if (portalTexture == null) {
+            try {
+                portalTexture = new Texture(Gdx.files.internal("assets/images/environment/decorations/portal.png"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        showLevel3Portal = true;
+
+        // Restore player's health to full
+        player.restoreFullHealth();
 
         // Set level 3 playable areas to cover the entire map
         player.setLevel3Areas();
@@ -1031,9 +1070,9 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Reset camera position to player
         camera.position.set(
-                player.getPosition().x + player.getWidth() / 2,
-                player.getPosition().y + player.getHeight() / 2,
-                0
+            player.getPosition().x + player.getWidth() / 2,
+            player.getPosition().y + player.getHeight() / 2,
+            0
         );
 
         // Clear all level 2 entities
@@ -1051,7 +1090,5 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             portalTexture.dispose();
             portalTexture = null;
         }
-
-        System.out.println("Level 3 transition completed");
     }
 }

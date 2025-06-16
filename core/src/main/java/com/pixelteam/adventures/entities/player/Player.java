@@ -220,6 +220,21 @@ public class Player extends Character {
         this.speed = 200f / 3f;
     }
 
+    public void setLevel3Areas() {
+        playableAreas.clear();
+        
+        // Make the entire map accessible
+        playableAreas.add(new Rectangle(
+            0,      // x - start from left edge
+            0,      // y - start from bottom
+            1280f,  // width - full map width
+            720f    // height - full map height
+        ));
+        
+        // Set speed for level 3 (same as level 2)
+        this.speed = 200f / 3f;
+    }
+
     public void setLevel1Areas() {
         initializePlayableAreas();
         // Повертаємо нормальну швидкість для 1 рівня

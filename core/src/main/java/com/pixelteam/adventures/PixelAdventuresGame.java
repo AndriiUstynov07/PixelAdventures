@@ -60,8 +60,14 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     // New level transition variables
     private Texture map2Texture;
+    private Texture map3Texture;
     private static boolean isLevel2 = false;
+    private static boolean isLevel3 = false;
     private Vector2 level2PlayerSpawn = new Vector2(995f, 65f); // Adjusted spawn position (770 + 50 = 820, 175 - 50 = 125)
+    private Vector2 level3PlayerSpawn = new Vector2(100f, 100f);
+    private Vector2 level2PortalPosition = new Vector2();
+    private boolean showLevel2Portal = false;
+    private boolean canEnterLevel2Portal = false;
 
     // Add getter for isLevel2
     public static boolean isLevel2() {
@@ -97,24 +103,58 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         batch = new SpriteBatch();
 
         // Load loading screen resources
-        loadingTexture = new Texture(Gdx.files.internal("images/environment/tiles/loadingscreen.png"));
+        try {
+            loadingTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/loadingscreen.png"));
+            System.out.println("Loading screen texture loaded successfully");
+        } catch (Exception e) {
+            System.out.println("Error loading loading screen texture: " + e.getMessage());
+            e.printStackTrace();
+        }
+
         loadingFont = new BitmapFont();
         loadingFont.getData().setScale(2f);
 
         // Load game over screen
-        gameOverTexture = new Texture(Gdx.files.internal("images/environment/tiles/gameoverscreen.png"));
+        try {
+            gameOverTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/gameoverscreen.png"));
+            System.out.println("Game over screen texture loaded successfully");
+        } catch (Exception e) {
+            System.out.println("Error loading game over screen texture: " + e.getMessage());
+            e.printStackTrace();
+        }
 
-        // Завантаження фонового зображення
-        backgroundTexture = new Texture(Gdx.files.internal("images/environment/tiles/map1.png"));
+        // Load map textures
+        try {
+            backgroundTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/map1.png"));
+            System.out.println("Map1 texture loaded successfully");
+            
+            map2Texture = new Texture(Gdx.files.internal("assets/images/environment/tiles/map2.png"));
+            System.out.println("Map2 texture loaded successfully");
+            
+            map3Texture = new Texture(Gdx.files.internal("assets/images/environment/tiles/map3.PNG"));
+            System.out.println("Map3 texture loaded successfully");
+        } catch (Exception e) {
+            System.out.println("Error loading map textures: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         // Завантаження текстури гравця
-        Texture playerTexture = new Texture(Gdx.files.internal("images/player/player.png"));
+        Texture playerTexture = null;
+        try {
+            playerTexture = new Texture(Gdx.files.internal("assets/images/player/player.png"));
+            System.out.println("Player texture loaded successfully");
+        } catch (Exception e) {
+            System.out.println("Error loading player texture: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         // Створення гравця в лівій кімнаті
         float playerX = 35f + (310f - 64f) / 2; // Центр лівої кімнати мінус половина розміру гравця
         float playerY = 260f + (165f - 64f) / 2; // Центр лівої кімнати мінус половина розміру гравця
         player = new Player(playerX, playerY);
-        player.setTexture(playerTexture);
+        if (playerTexture != null) {
+            player.setTexture(playerTexture);
+        }
 
         // Створення меча
         if (Gdx.files.internal("images/weapons/sword.png").exists()) {
@@ -231,7 +271,13 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         Gdx.gl.glTexParameteri(GL20.GL_TEXTURE_2D, GL20.GL_TEXTURE_MAG_FILTER, GL20.GL_NEAREST);
 
         // Load portal texture
-        portalTexture = new Texture(Gdx.files.internal("images/environment/decorations/portal.png"));
+        try {
+            portalTexture = new Texture(Gdx.files.internal("assets/images/environment/decorations/portal.png"));
+            System.out.println("Portal texture loaded successfully from: assets/images/environment/decorations/portal.png");
+        } catch (Exception e) {
+            System.out.println("Error loading portal texture: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         // Set portal position in the middle of the right room
         portalPosition.x = 835f + (310f - 120f) / 2; // Center of right room minus half of portal width
@@ -254,9 +300,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             player.getPosition().y + player.getHeight() / 2,
             0
         );
-
-        // Load map2 texture
-        map2Texture = new Texture(Gdx.files.internal("images/environment/tiles/map2.png"));
 
         font = new BitmapFont();
 
@@ -478,6 +521,86 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Check collision with Ice Knight mini-boss
         if (isLevel2 && player.isAlive() && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
             checkPlayerIceKnightCollision();
+        }
+
+        // Check if both bosses are dead and show portal
+        if (isLevel2 && !isLevel3 && iceBoss != null && miniBossIceKnight != null && 
+            !iceBoss.isAlive() && !miniBossIceKnight.isAlive() && !showLevel2Portal) {
+            showLevel2Portal = true;
+            // Set portal position at the ice boss location
+            level2PortalPosition.set(iceBoss.getPosition());
+            System.out.println("Portal should appear at: " + level2PortalPosition); // Debug message
+            
+            // Reload portal texture if it was disposed
+            if (portalTexture == null) {
+                try {
+                    portalTexture = new Texture(Gdx.files.internal("assets/images/environment/decorations/portal.png"));
+                    System.out.println("Portal texture reloaded successfully");
+                } catch (Exception e) {
+                    System.out.println("Error reloading portal texture: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // Check if player is near level 2 portal
+        if (showLevel2Portal) {
+            float distanceToPortal = player.getPosition().dst(level2PortalPosition);
+            canEnterLevel2Portal = distanceToPortal < PORTAL_INTERACTION_DISTANCE;
+
+            // Check for portal interaction
+            if (canEnterLevel2Portal && Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.E)) {
+                // Transition to level 3
+                setLevel3();
+                backgroundTexture = map3Texture;
+                player.getPosition().set(level3PlayerSpawn);
+
+                // Clear all level 2 entities
+                traps.clear();
+                potions.clear();
+                if (iceSpirits != null) {
+                    iceSpirits.clear();
+                }
+                iceSpiritsSpawned = 0;
+
+                // Reset portal state
+                showLevel2Portal = false;
+                canEnterLevel2Portal = false;
+                if (portalTexture != null) {
+                    portalTexture.dispose();
+                    portalTexture = null;
+                }
+
+                // Reset camera position to player
+                camera.position.set(
+                    player.getPosition().x + player.getWidth() / 2,
+                    player.getPosition().y + player.getHeight() / 2,
+                    0
+                );
+            }
+        }
+
+        // Render level 2 portal if it should be shown
+        if (showLevel2Portal) {
+            if (portalTexture != null) {
+                System.out.println("Drawing portal at: " + level2PortalPosition.x + ", " + level2PortalPosition.y);
+                // Scale portal dimensions for level 2
+                float portalWidth = 120f * LEVEL2_PLAYER_SCALE;
+                float portalHeight = 220f * LEVEL2_PLAYER_SCALE;
+                batch.draw(portalTexture, level2PortalPosition.x, level2PortalPosition.y, portalWidth, portalHeight);
+
+                // Show interaction prompt if player is near portal
+                if (canEnterLevel2Portal) {
+                    // Scale text position and size
+                    float textX = level2PortalPosition.x;
+                    float textY = level2PortalPosition.y - (20f * LEVEL2_PLAYER_SCALE);
+                    font.getData().setScale(LEVEL2_PLAYER_SCALE);
+                    font.draw(batch, "Press E to enter", textX, textY);
+                    font.getData().setScale(1.0f); // Reset scale after drawing
+                }
+            } else {
+                System.out.println("Portal texture is null!");
+            }
         }
 
         // Update ice spirit spawn timer and spawn new spirits
@@ -852,5 +975,59 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         traps.add(new Trap(corridorX, startY, trapSize, 70, trapTexture));
         traps.add(new Trap(corridorX+30f, startY + gap, trapSize, 70, trapTexture));
         traps.add(new Trap(corridorX, startY + 2 * gap, trapSize, 70, trapTexture));
+    }
+
+    public void setLevel3() {
+        isLevel3 = true;
+        isLevel2 = false;
+        
+        // Set level 3 background
+        backgroundTexture = map3Texture;
+        System.out.println("Switching to level 3 background");
+        
+        // Set player position for level 3
+        player.getPosition().set(level3PlayerSpawn);
+        System.out.println("Player position set to: " + level3PlayerSpawn);
+        
+        // Set level 3 playable areas to cover the entire map
+        player.setLevel3Areas();
+        
+        // Apply level 2 scale to player and camera
+        player.setScale(LEVEL2_PLAYER_SCALE);
+        if (player.getWeapon() != null) {
+            player.getWeapon().setScale(LEVEL2_PLAYER_SCALE);
+        }
+        player.setHealthBarScale(LEVEL2_PLAYER_SCALE);
+        
+        // Apply level 2 camera scale
+        viewportWidth = worldWidth * 0.412f * LEVEL2_CAMERA_SCALE;
+        viewportHeight = worldHeight * 0.412f * LEVEL2_CAMERA_SCALE;
+        viewport.setWorldSize(viewportWidth, viewportHeight);
+        viewport.apply();
+        
+        // Reset camera position to player
+        camera.position.set(
+            player.getPosition().x + player.getWidth() / 2,
+            player.getPosition().y + player.getHeight() / 2,
+            0
+        );
+        
+        // Clear all level 2 entities
+        traps.clear();
+        potions.clear();
+        if (iceSpirits != null) {
+            iceSpirits.clear();
+        }
+        iceSpiritsSpawned = 0;
+        
+        // Reset portal state
+        showLevel2Portal = false;
+        canEnterLevel2Portal = false;
+        if (portalTexture != null) {
+            portalTexture.dispose();
+            portalTexture = null;
+        }
+        
+        System.out.println("Level 3 transition completed");
     }
 }

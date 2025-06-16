@@ -47,8 +47,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
-    private static final float LEVEL2_CAMERA_SCALE = 0.6f; // Scale factor for level 2 camera
-    public static final float LEVEL2_PLAYER_SCALE = 0.45f; // Scale factor for level 2 player
+    private static final float LEVEL2_CAMERA_SCALE = 0.3f; // Scale factor for level 2 camera
+    public static final float LEVEL2_PLAYER_SCALE = 0.25f; // Scale factor for level 2 player
     private float viewportWidth;
     private float viewportHeight;
 

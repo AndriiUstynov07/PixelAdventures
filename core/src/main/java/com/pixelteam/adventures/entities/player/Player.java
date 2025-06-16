@@ -27,7 +27,6 @@ public class Player extends Character {
     private boolean facingLeft;
     private static Texture pixelTexture;
     private float damageCooldown; // Кулдаун для запобігання багаторазовому отриманню шкоди
-    private Weapon weapon;
     private static final float DAMAGE_COOLDOWN_TIME = 1.0f; // 1 секунда захисту після отримання шкоди
 
     // Межі ігрового поля (кімнати та коридори)
@@ -73,42 +72,42 @@ public class Player extends Character {
 
         // Ліва кімната (коричнева підлога)
         playableAreas.add(new Rectangle(
-                110,   // x - відступ від лівого краю
-                260,  // y - відступ від низу
-                120,  // width - ширина коричневої зони
-                165   // height - висота коричневої зони
+            110,   // x - відступ від лівого краю
+            260,  // y - відступ від низу
+            120,  // width - ширина коричневої зони
+            165   // height - висота коричневої зони
         ));
 
         // Лівий коридор (горизонтальний)
         playableAreas.add(new Rectangle(
-                155,  // x - з'єднується з лівою кімнатою
-                341,  // y - центр по вертикалі
-                315,  // width - до центральної кімнати
-                24    // height - висота коридору
+            155,  // x - з'єднується з лівою кімнатою
+            341,  // y - центр по вертикалі
+            315,  // width - до центральної кімнати
+            24    // height - висота коридору
         ));
 
         // Центральна кімната (коричнева підлога)
         playableAreas.add(new Rectangle(
-                470,  // x - центральна позиція
-                260,  // y - відступ від низу
-                120,  // width - ширина центральної кімнати
-                165   // height - висота коричневої зони
+            470,  // x - центральна позиція
+            260,  // y - відступ від низу
+            120,  // width - ширина центральної кімнати
+            165   // height - висота коричневої зони
         ));
 
         // Правий коридор (горизонтальний)
         playableAreas.add(new Rectangle(
-                590,  // x - з'єднується з центральною кімнатою
-                341,  // y - центр по вертикалі
-                245,  // width - до правої кімнати
-                24    // height - висота коридору
+            590,  // x - з'єднується з центральною кімнатою
+            341,  // y - центр по вертикалі
+            245,  // width - до правої кімнати
+            24    // height - висота коридору
         ));
 
         // Права кімната (коричнева підлога)
         playableAreas.add(new Rectangle(
-                835,  // x - права позиція
-                260,  // y - відступ від низу
-                310,  // width - ширина коричневої зони
-                165   // height - висота коричневої зони
+            835,  // x - права позиція
+            260,  // y - відступ від низу
+            310,  // width - ширина коричневої зони
+            165   // height - висота коричневої зони
         ));
     }
 
@@ -116,95 +115,95 @@ public class Player extends Character {
     private void initializeLevel2PlayableAreas() {
         playableAreas.clear();
 
-        final float PLAYER_WIDTH = (float) (12.5f*1.3);
-        final float PLAYER_HEIGHT = (float) (17.0f*1.3);
+        final float PLAYER_WIDTH = 12.5f;
+        final float PLAYER_HEIGHT = 17.0f;
 
         // Room 1
         playableAreas.add(new Rectangle(
-                950.17f + PLAYER_WIDTH,
-                45.91f + PLAYER_HEIGHT,
-                96.69f - PLAYER_WIDTH,
-                63.86f - PLAYER_HEIGHT
+            950.17f + PLAYER_WIDTH,
+            37.91f + PLAYER_HEIGHT,
+            96.69f - PLAYER_WIDTH,
+            63.86f - PLAYER_HEIGHT
         ));
 
         // Passage 1 (горизонтальний)
         playableAreas.add(new Rectangle(
-                678.805f,
-                65.74f + PLAYER_HEIGHT,
-                344.9f,
-                21.65f - PLAYER_HEIGHT
+            678.805f,
+            57.74f + PLAYER_HEIGHT,
+            344.9f,
+            21.65f - PLAYER_HEIGHT
         ));
 
         // Room 2
         playableAreas.add(new Rectangle(
-                513.32f + PLAYER_WIDTH,
-                24.01f + PLAYER_HEIGHT,
-                235.62f - PLAYER_WIDTH,
-                89.04f - PLAYER_HEIGHT
+            513.32f + PLAYER_WIDTH,
+            16.01f + PLAYER_HEIGHT,
+            235.62f - PLAYER_WIDTH,
+            89.04f - PLAYER_HEIGHT
         ));
 
         // Passage 2
         playableAreas.add(new Rectangle(
-                237.92f,
-                65.94f + PLAYER_HEIGHT,
-                343.24f,
-                20.04f - PLAYER_HEIGHT
+            237.92f,
+            57.94f + PLAYER_HEIGHT,
+            343.24f,
+            20.04f - PLAYER_HEIGHT
         ));
 
         // Room 3
         playableAreas.add(new Rectangle(
-                216.16f + PLAYER_WIDTH,
-                37.38f + PLAYER_HEIGHT,
-                90.88f - PLAYER_WIDTH,
-                71.71f - PLAYER_HEIGHT
+            216.16f + PLAYER_WIDTH,
+            29.38f + PLAYER_HEIGHT,
+            90.88f - PLAYER_WIDTH,
+            71.71f - PLAYER_HEIGHT
         ));
 
         // Passage 3 (вертикальний)
         playableAreas.add(new Rectangle(
-                623.25f,
-                78.015f + PLAYER_HEIGHT,
-                26.78f,
-                174.94f - PLAYER_HEIGHT
+            612.25f,
+            70.015f + PLAYER_HEIGHT,
+            35.78f,
+            174.94f - PLAYER_HEIGHT
         ));
 
         // Room 4
         playableAreas.add(new Rectangle(
-                513.89f + PLAYER_WIDTH,
-                224.16f + PLAYER_HEIGHT,
-                235.81f - PLAYER_WIDTH,
-                162.53f - PLAYER_HEIGHT
+            513.89f + PLAYER_WIDTH,
+            216.16f + PLAYER_HEIGHT,
+            235.81f - PLAYER_WIDTH,
+            162.53f - PLAYER_HEIGHT
         ));
 
         // Passage 4
         playableAreas.add(new Rectangle(
-                252.63f,
-                293.11f + PLAYER_HEIGHT,
-                324.64f,
-                25.13f - PLAYER_HEIGHT
+            252.63f,
+            285.11f + PLAYER_HEIGHT,
+            324.64f,
+            25.13f - PLAYER_HEIGHT
         ));
 
         // Room 5
         playableAreas.add(new Rectangle(
-                190.37f + PLAYER_WIDTH,
-                238.34f + PLAYER_HEIGHT,
-                143.16f - PLAYER_WIDTH,
-                120.62f - PLAYER_HEIGHT
+            190.37f + PLAYER_WIDTH,
+            230.34f + PLAYER_HEIGHT,
+            143.16f - PLAYER_WIDTH,
+            120.62f - PLAYER_HEIGHT
         ));
 
         // Passage 5 (вертикальний)
         playableAreas.add(new Rectangle(
-                622.79f,
-                299.17f + PLAYER_HEIGHT,
-                27.63f,
-                411.4f - PLAYER_HEIGHT
+            611.79f,
+            291.17f + PLAYER_HEIGHT,
+            36.63f,
+            411.4f - PLAYER_HEIGHT
         ));
 
         // Room 6
         playableAreas.add(new Rectangle(
-                580.76f + PLAYER_WIDTH,
-                625.40f + PLAYER_HEIGHT,
-                100.86f - PLAYER_WIDTH,
-                57.40f - PLAYER_HEIGHT
+            580.76f + PLAYER_WIDTH,
+            617.40f + PLAYER_HEIGHT,
+            100.86f - PLAYER_WIDTH,
+            57.40f - PLAYER_HEIGHT
         ));
     }
 
@@ -307,7 +306,7 @@ public class Player extends Character {
             this.swordAttackAnimation += 1600.0F * deltaTime;
 
             // Check for boss attacks during the entire attack animation
-            if (this.weapon != null) {
+            if (this.currentWeapon != null) {
                 checkBossAttack();
             }
 
@@ -364,10 +363,10 @@ public class Player extends Character {
 
         // Створюємо хітбокс зброї (трохи більший для кращого попадання)
         return new Rectangle(
-                weaponX - 10,
-                weaponY - 10,
-                weaponWidth + 20,
-                weaponHeight + 20
+            weaponX - 10,
+            weaponY - 10,
+            weaponWidth + 20,
+            weaponHeight + 20
         );
     }
     public void render(SpriteBatch batch) {
@@ -390,7 +389,7 @@ public class Player extends Character {
         }
 
         // Малюємо зброю, тільки якщо гравець живий і має зброю
-        if (this.alive && this.weapon != null) {
+        if (this.alive && this.currentWeapon != null) {
             float offsetX;
             float offsetY;
             float totalRotation;
@@ -405,10 +404,10 @@ public class Player extends Character {
                 totalRotation = this.swordRotation - this.swordAttackAnimation;
             }
 
-            float swordX = this.position.x + this.width / 2.0F + offsetX - this.weapon.getWidth() / 2.0F;
-            float swordY = this.position.y + this.height / 2.0F + offsetY - this.weapon.getHeight() / 2.0F;
+            float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
+            float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
 
-            this.weapon.render(batch, swordX, swordY, totalRotation);
+            this.currentWeapon.render(batch, swordX, swordY, totalRotation);
         }
         // Дуже важливо: повертаємо колір batch на повну непрозорість (білий)
         // після малювання гравця та зброї, щоб не впливати на інші об'єкти.
@@ -425,12 +424,12 @@ public class Player extends Character {
     }
 
     public void attack() {
-        if (this.attackCooldown <= 0.0F && this.weapon != null) {
+        if (this.attackCooldown <= 0.0F && this.currentWeapon != null) {
             this.isAttacking = true;
             this.swordAttackAnimation = 0.0F;
             this.attackCooldown = 0.5F;
             Vector2 target = new Vector2((float)Gdx.input.getX(), (float)(Gdx.graphics.getHeight() - Gdx.input.getY()));
-            this.weapon.attack(this, target);
+            this.currentWeapon.attack(this, target);
 
             // Перевіряємо чи атакуємо боса
             checkBossAttack();
@@ -453,21 +452,21 @@ public class Player extends Character {
             totalRotation = this.swordRotation - this.swordAttackAnimation;
         }
 
-        float swordX = this.position.x + this.width / 2.0F + offsetX - this.weapon.getWidth() / 2.0F;
-        float swordY = this.position.y + this.height / 2.0F + offsetY - this.weapon.getHeight() / 2.0F;
+        float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
+        float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
 
         // Create a larger hitbox for the sword to make collision detection more forgiving
         Rectangle swordHitbox = new Rectangle(
-                swordX - 10, // Expand hitbox by 10 pixels on each side
-                swordY - 10,
-                this.weapon.getWidth() + 20,
-                this.weapon.getHeight() + 20
+            swordX - 10, // Expand hitbox by 10 pixels on each side
+            swordY - 10,
+            this.currentWeapon.getWidth() + 20,
+            this.currentWeapon.getHeight() + 20
         );
 
         // Check collision with bosses
         for (Boss boss : bosses) {
             if (boss.isAlive() && boss.getBounds().overlaps(swordHitbox)) {
-                boss.takeDamage(this.weapon.getDamage());
+                boss.takeDamage(this.currentWeapon.getDamage());
             }
         }
     }
@@ -483,11 +482,11 @@ public class Player extends Character {
 
     public void takeDamage(int damage) {
         if (!this.alive) return; // Не отримуємо шкоди якщо вже мертві
-        if (this.damageCooldown > 0) return;
+        if (this.damageCooldown > 0) return; // Не отримуємо шкоди під час кулдауну
 
         this.health -= damage;
-        System.out.println("Player took " + damage + " damage. Health: " + this.health + "/" + this.maxHealth);
         this.damageCooldown = DAMAGE_COOLDOWN_TIME; // Встановлюємо кулдаун
+        System.out.println("Player took " + damage + " damage. Health: " + this.health + "/" + this.maxHealth);
 
         if (this.health <= 0) {
             this.health = 0; // Не даємо здоров'ю стати негативним
@@ -509,11 +508,6 @@ public class Player extends Character {
         this.velocity.set(0, 0); // Зупиняємо рух
         System.out.println("Player has died!");
     }
-
-    public void restoreFullHealth() {
-        this.health = this.maxHealth;
-    }
-
     private Texture getPixelTexture() {
         if (pixelTexture == null) {
             // Створюємо 1x1 білу текстуру
@@ -543,8 +537,8 @@ public class Player extends Character {
         batch.setColor(0.2f, 0.2f, 0.2f, 0.8f);
         batch.draw(getPixelTexture(), barX - 2f * scale, barY - 2f * scale, barWidth + 4f * scale, barHeight + 4f * scale);
 
-        // Змінюємо колір смужки в залежності від здоров'я (від зеленого до червоного)
-        batch.setColor(1.0f - healthPercent, healthPercent, 0.0f, 1.0f);
+        // Малюємо смужку здоров'я (червоний колір)
+        batch.setColor(0.8f, 0.1f, 0.1f, 1.0f); // Темно-червоний колір
         batch.draw(getPixelTexture(), barX, barY, barWidth * healthPercent, barHeight);
 
         // Повертаємо білий колір для нормального рендерингу інших об'єктів
@@ -562,7 +556,7 @@ public class Player extends Character {
     }
 
     public void equipWeapon(Weapon weapon) {
-        this.weapon = weapon;
+        this.currentWeapon = weapon;
     }
 
     public void equipArmor(Armor armor) {
@@ -579,10 +573,6 @@ public class Player extends Character {
 
     public void setAttacking(boolean attacking) {
         this.isAttacking = attacking;
-    }
-
-    public void setSpeed(float speed) {
-        this.speed = speed;
     }
 
     public boolean isFacingLeft() {
@@ -671,7 +661,7 @@ public class Player extends Character {
     }
 
     public Weapon getWeapon() {
-        return this.weapon;
+        return this.currentWeapon;
     }
 
     public float getDamageCooldown() {
@@ -682,31 +672,39 @@ public class Player extends Character {
         this.damageCooldown = cooldown;
     }
 
-    public Rectangle getWeaponBounds() {
-        if (weapon == null || !isAttacking) return null;
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
 
-        float weaponWidth = weapon.getWidth() * 0.3f;
-        float weaponHeight = weapon.getHeight() * 0.3f;
+    public void restoreFullHealth() {
+        this.health = this.maxHealth;
+    }
+
+    public Rectangle getWeaponBounds() {
+        if (currentWeapon == null || currentWeapon.getTexture() == null) return null;
+
+        float weaponWidth = currentWeapon.getWidth() * 0.5f;
+        float weaponHeight = currentWeapon.getHeight() * 0.5f;
 
         float offsetX;
         float offsetY;
 
         if (facingLeft) {
-            offsetX = -20.0f;
-            offsetY = -5.0f;
+            offsetX = -23.0f * scale;
+            offsetY = -1.0f * scale;
         } else {
-            offsetX = 20.0f;
-            offsetY = -5.0f;
+            offsetX = 23.0f * scale;
+            offsetY = -1.0f * scale;
         }
 
         float weaponX = position.x + width / 2.0f + offsetX - weaponWidth / 2.0f;
         float weaponY = position.y + height / 2.0f + offsetY - weaponHeight / 2.0f;
 
         return new Rectangle(
-                weaponX,
-                weaponY,
-                weaponWidth,
-                weaponHeight
+            weaponX - 10, // Expand hitbox by 10 pixels on each side
+            weaponY - 10,
+            weaponWidth + 20,
+            weaponHeight + 20
         );
     }
 }

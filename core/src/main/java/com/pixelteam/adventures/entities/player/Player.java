@@ -115,13 +115,13 @@ public class Player extends Character {
     private void initializeLevel2PlayableAreas() {
         playableAreas.clear();
 
-        final float PLAYER_WIDTH = 12.5f;
-        final float PLAYER_HEIGHT = 17.0f;
+        final float PLAYER_WIDTH = (float) (12.5f*1.3);
+        final float PLAYER_HEIGHT = (float) (17.0f*1.3);
 
         // Room 1
         playableAreas.add(new Rectangle(
             950.17f + PLAYER_WIDTH,
-            37.91f + PLAYER_HEIGHT,
+            45.91f + PLAYER_HEIGHT,
             96.69f - PLAYER_WIDTH,
             63.86f - PLAYER_HEIGHT
         ));
@@ -129,7 +129,7 @@ public class Player extends Character {
         // Passage 1 (горизонтальний)
         playableAreas.add(new Rectangle(
             678.805f,
-            57.74f + PLAYER_HEIGHT,
+            65.74f + PLAYER_HEIGHT,
             344.9f,
             21.65f - PLAYER_HEIGHT
         ));
@@ -137,7 +137,7 @@ public class Player extends Character {
         // Room 2
         playableAreas.add(new Rectangle(
             513.32f + PLAYER_WIDTH,
-            16.01f + PLAYER_HEIGHT,
+            24.01f + PLAYER_HEIGHT,
             235.62f - PLAYER_WIDTH,
             89.04f - PLAYER_HEIGHT
         ));
@@ -145,7 +145,7 @@ public class Player extends Character {
         // Passage 2
         playableAreas.add(new Rectangle(
             237.92f,
-            57.94f + PLAYER_HEIGHT,
+            65.94f + PLAYER_HEIGHT,
             343.24f,
             20.04f - PLAYER_HEIGHT
         ));
@@ -153,23 +153,23 @@ public class Player extends Character {
         // Room 3
         playableAreas.add(new Rectangle(
             216.16f + PLAYER_WIDTH,
-            29.38f + PLAYER_HEIGHT,
+            37.38f + PLAYER_HEIGHT,
             90.88f - PLAYER_WIDTH,
             71.71f - PLAYER_HEIGHT
         ));
 
         // Passage 3 (вертикальний)
         playableAreas.add(new Rectangle(
-            612.25f,
-            70.015f + PLAYER_HEIGHT,
-            35.78f,
+            623.25f,
+            78.015f + PLAYER_HEIGHT,
+            26.78f,
             174.94f - PLAYER_HEIGHT
         ));
 
         // Room 4
         playableAreas.add(new Rectangle(
             513.89f + PLAYER_WIDTH,
-            216.16f + PLAYER_HEIGHT,
+            224.16f + PLAYER_HEIGHT,
             235.81f - PLAYER_WIDTH,
             162.53f - PLAYER_HEIGHT
         ));
@@ -177,7 +177,7 @@ public class Player extends Character {
         // Passage 4
         playableAreas.add(new Rectangle(
             252.63f,
-            285.11f + PLAYER_HEIGHT,
+            293.11f + PLAYER_HEIGHT,
             324.64f,
             25.13f - PLAYER_HEIGHT
         ));
@@ -185,23 +185,23 @@ public class Player extends Character {
         // Room 5
         playableAreas.add(new Rectangle(
             190.37f + PLAYER_WIDTH,
-            230.34f + PLAYER_HEIGHT,
+            238.34f + PLAYER_HEIGHT,
             143.16f - PLAYER_WIDTH,
             120.62f - PLAYER_HEIGHT
         ));
 
         // Passage 5 (вертикальний)
         playableAreas.add(new Rectangle(
-            611.79f,
-            291.17f + PLAYER_HEIGHT,
-            36.63f,
+            622.79f,
+            299.17f + PLAYER_HEIGHT,
+            27.63f,
             411.4f - PLAYER_HEIGHT
         ));
 
         // Room 6
         playableAreas.add(new Rectangle(
             580.76f + PLAYER_WIDTH,
-            617.40f + PLAYER_HEIGHT,
+            625.40f + PLAYER_HEIGHT,
             100.86f - PLAYER_WIDTH,
             57.40f - PLAYER_HEIGHT
         ));
@@ -508,6 +508,7 @@ public class Player extends Character {
         this.velocity.set(0, 0); // Зупиняємо рух
         System.out.println("Player has died!");
     }
+
     private Texture getPixelTexture() {
         if (pixelTexture == null) {
             // Створюємо 1x1 білу текстуру
@@ -537,8 +538,8 @@ public class Player extends Character {
         batch.setColor(0.2f, 0.2f, 0.2f, 0.8f);
         batch.draw(getPixelTexture(), barX - 2f * scale, barY - 2f * scale, barWidth + 4f * scale, barHeight + 4f * scale);
 
-        // Малюємо смужку здоров'я (червоний колір)
-        batch.setColor(0.8f, 0.1f, 0.1f, 1.0f); // Темно-червоний колір
+        // Змінюємо колір смужки в залежності від здоров'я (від зеленого до червоного)Add commentMore actions
+        batch.setColor(1.0f - healthPercent, healthPercent, 0.0f, 1.0f);
         batch.draw(getPixelTexture(), barX, barY, barWidth * healthPercent, barHeight);
 
         // Повертаємо білий колір для нормального рендерингу інших об'єктів
@@ -575,7 +576,7 @@ public class Player extends Character {
         this.isAttacking = attacking;
     }
 
-    public boolean isFacingLeft() {
+    public boolean isFacingdLeft() {
         return this.facingLeft;
     }
 

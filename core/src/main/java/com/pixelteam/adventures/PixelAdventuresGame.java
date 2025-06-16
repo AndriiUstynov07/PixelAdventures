@@ -47,8 +47,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
-    private static final float LEVEL2_CAMERA_SCALE = 0.3f; // Scale factor for level 2 camera
-    public static final float LEVEL2_PLAYER_SCALE = 0.25f; // Scale factor for level 2 player
+    private static final float LEVEL2_CAMERA_SCALE = 0.6f; // Scale factor for level 2 camera
+    public static final float LEVEL2_PLAYER_SCALE = 0.45f; // Scale factor for level 2 player
     private float viewportWidth;
     private float viewportHeight;
 
@@ -472,8 +472,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             // Check if player is in room 2
             boolean isPlayerInRoom2 = false;
             for (Rectangle area : player.getPlayableAreas()) {
-                if (area.x == 513.32f + 12.5f && // Room 2 coordinates
-                    area.y == 16.01f + 17.0f &&
+                if (area.x == 513.32f + 16.25f && // Room 2 coordinates
+                    area.y == 24.01f + 22.1f &&
                     player.getBounds().overlaps(area)) {
                     isPlayerInRoom2 = true;
                     break;
@@ -612,7 +612,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                 float minDamageDistance = 15f; // Зменшено до 15f для більш точного визначення дистанції
 
                 // Додаткова перевірка, чи гравець дійсно знаходиться в зоні атаки
-                boolean isInAttackRange = distance <= minDamageDistance && 
+                boolean isInAttackRange = distance <= minDamageDistance &&
                                         Math.abs(player.getPosition().y - miniBossIceKnight.getPosition().y) < 10f;
 
                 // Перевіряємо, чи зброя дійсно знаходиться в правильній позиції для атаки
@@ -623,10 +623,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                     isWeaponInAttackPosition = weaponBounds.x > miniBossIceKnight.getPosition().x;
                 }
 
-                if (miniBossIceKnight.isAttacking() && 
-                    player.getDamageCooldown() <= 0 && 
-                    isFacingPlayer && 
-                    isInAttackRange && 
+                if (miniBossIceKnight.isAttacking() &&
+                    player.getDamageCooldown() <= 0 &&
+                    isFacingPlayer &&
+                    isInAttackRange &&
                     isWeaponInAttackPosition) {
                     MeleeWeapon weapon = miniBossIceKnight.getWeapon();
                     if (weapon != null) {
@@ -728,7 +728,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.setScale(LEVEL2_PLAYER_SCALE);
         player.setPosition(new Vector2(100, 100));
         player.restoreFullHealth();
-        player.setSpeed(400f);
+        player.setSpeed(900f);
         potions.clear();
 
         // Create and initialize Ice Knight mini-boss

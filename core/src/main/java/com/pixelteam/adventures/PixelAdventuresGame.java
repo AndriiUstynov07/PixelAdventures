@@ -24,6 +24,7 @@ import com.pixelteam.adventures.entities.enemies.MiniBossFirst;
 import com.pixelteam.adventures.entities.enemies.MiniBossIceKnight;
 import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
+import com.pixelteam.adventures.entities.enemies.IceBoss;
 
 
 public class PixelAdventuresGame extends ApplicationAdapter {
@@ -82,6 +83,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private boolean showGameOver = false;
 
     private MiniBossIceKnight miniBossIceKnight;
+    private IceBoss iceBoss;
 
     private List<IceSpirit> iceSpirits;
     private Texture iceSpiritTexture;
@@ -431,6 +433,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
                 // Clear traps and portal
                 traps.clear();
+                addLevel2Traps();
                 showPortal = false;
                 canEnterPortal = false;
                 if (portalTexture != null) {
@@ -457,9 +460,19 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         }
 
+        // Update Ice Boss
+        if (isLevel2 && iceBoss != null && iceBoss.isAlive() && player.isAlive()) {
+            iceBoss.update(deltaTime, player);
+        }
+
         // Update Ice Knight mini-boss
         if (isLevel2 && miniBossIceKnight != null && miniBossIceKnight.isAlive() && player.isAlive()) {
             miniBossIceKnight.update(deltaTime, player);
+        }
+
+        // Check collision with Ice Boss
+        if (isLevel2 && player.isAlive() && iceBoss != null && iceBoss.isAlive()) {
+            checkPlayerIceBossCollision();
         }
 
         // Check collision with Ice Knight mini-boss
@@ -533,6 +546,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Рендеринг смужки здоров'я гравця завжди (навіть якщо мертвий, щоб показати 0 HP)
         player.renderHealthBar(batch);
 
+        // Render Ice Boss
+        if (isLevel2 && iceBoss != null && iceBoss.isAlive()) {
+            iceBoss.render(batch);
+        }
+
         // Render Ice Knight mini-boss
         if (isLevel2 && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
             miniBossIceKnight.render(batch);
@@ -563,6 +581,26 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             player.getPosition().add(pushDirection.scl(pushDistance));
 
             // Додаткова перевірка меж після відштовхування
+            player.checkBounds();
+        }
+    }
+
+    private void checkPlayerIceBossCollision() {
+        if (!player.isAlive() || iceBoss == null || !iceBoss.isAlive()) return;
+
+        if (player.getBounds().overlaps(iceBoss.getBounds())) {
+            Vector2 playerCenter = new Vector2(
+                    player.getPosition().x + player.getWidth() / 2,
+                    player.getPosition().y + player.getHeight() / 2
+            );
+            Vector2 bossCenter = new Vector2(
+                    iceBoss.getPosition().x + iceBoss.getWidth() / 2,
+                    iceBoss.getPosition().y + iceBoss.getHeight() / 2
+            );
+
+            Vector2 pushDirection = playerCenter.sub(bossCenter).nor();
+            float pushDistance = 5.0f;
+            player.getPosition().add(pushDirection.scl(pushDistance));
             player.checkBounds();
         }
     }
@@ -688,6 +726,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             gameOverTexture.dispose();
         }
 
+        if (iceBoss != null) {
+            if (iceBoss.getTexture() != null) iceBoss.getTexture().dispose();
+            if (iceBoss.getWeapon() != null) iceBoss.getWeapon().dispose();
+            iceBoss.dispose();
+        }
+
         if (miniBossIceKnight != null) {
             if (miniBossIceKnight.getTexture() != null) miniBossIceKnight.getTexture().dispose();
             if (miniBossIceKnight.getWeapon() != null) miniBossIceKnight.getWeapon().dispose();
@@ -728,8 +772,32 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.setScale(LEVEL2_PLAYER_SCALE);
         player.setPosition(new Vector2(100, 100));
         player.restoreFullHealth();
-        player.setSpeed(900f);
+        player.setSpeed(4000f);
         potions.clear();
+
+        // Create and initialize Ice Boss in room 6
+        float iceBossX = 580.76f + (100.86f - 64f) / 2f;
+        float iceBossY = 625.40f + (57.40f - 64f) / 2f;
+        iceBoss = new IceBoss(iceBossX, iceBossY);
+        iceBoss.setTarget(player);
+
+        // Load Ice Boss texture
+        if (Gdx.files.internal("images/monsters/ice_boss.PNG").exists()) {
+            Texture iceBossTexture = new Texture(Gdx.files.internal("images/monsters/ice_boss.PNG"));
+            iceBoss.setTexture(iceBossTexture);
+        } else {
+            Texture fallbackTexture = player.getTexture();
+            iceBoss.setTexture(fallbackTexture);
+        }
+
+        // Ice Boss uses the same weapon as the mini ice boss
+        if (Gdx.files.internal("images/weapons/miniboss2weapon.png").exists()) {
+            MeleeWeapon iceBossWeapon = new MeleeWeapon("Ice Boss Weapon", 30, 1.0f, "images/weapons/miniboss2weapon.png");
+            iceBoss.equipWeapon(iceBossWeapon);
+        } else {
+            MeleeWeapon iceBossWeapon = new MeleeWeapon("Ice Boss Weapon", 30, 1.0f, "images/weapons/sword.png");
+            iceBoss.equipWeapon(iceBossWeapon);
+        }
 
         // Create and initialize Ice Knight mini-boss
         float iceKnightX = 385f + (360f - 80f) / 2;
@@ -752,20 +820,35 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Load Ice Knight weapon
         if (Gdx.files.internal("images/weapons/miniboss2weapon.png").exists()) {
-            MeleeWeapon iceKnightWeapon = new MeleeWeapon("Ice Knight Weapon", 25, 1.0f, "images/weapons/miniboss2weapon.png");
+            MeleeWeapon iceKnightWeapon = new MeleeWeapon("Ice Knight Weapon", 40, 1.0f, "images/weapons/miniboss2weapon.png");
             miniBossIceKnight.equipWeapon(iceKnightWeapon);
         } else {
             // Use regular sword as fallback
-            MeleeWeapon iceKnightWeapon = new MeleeWeapon("Ice Knight Weapon", 25, 1.0f, "images/weapons/sword.png");
+            MeleeWeapon iceKnightWeapon = new MeleeWeapon("Ice Knight Weapon",40 , 1.0f, "images/weapons/sword.png");
             miniBossIceKnight.equipWeapon(iceKnightWeapon);
         }
 
         // Add Ice Knight to player's boss list for collision detection
         player.addBoss(miniBossIceKnight);
+        player.addBoss(iceBoss);
+
 
         // Initialize ice spirits list and spawn timer
         iceSpirits = new ArrayList<>();
         iceSpiritSpawnTimer = 0f;
         iceSpiritsSpawned = 0;
+    }
+
+    private void addLevel2Traps() {
+        if (trapTexture == null || traps == null) return;
+
+        float trapSize = 20f;
+        float corridorX = 610.79f;
+        float startY = 420f;
+        float gap = 75f;
+
+        traps.add(new Trap(corridorX, startY, trapSize, 70, trapTexture));
+        traps.add(new Trap(corridorX+30f, startY + gap, trapSize, 70, trapTexture));
+        traps.add(new Trap(corridorX, startY + 2 * gap, trapSize, 70, trapTexture));
     }
 }

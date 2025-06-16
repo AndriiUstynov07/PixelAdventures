@@ -47,8 +47,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Viewport viewport;
     private float worldWidth;
     private float worldHeight;
-    private static final float LEVEL2_CAMERA_SCALE = 0.3f; // Scale factor for level 2 camera
-    private static final float LEVEL2_PLAYER_SCALE = 0.25f; // Scale factor for level 2 player
+    private static final float LEVEL2_CAMERA_SCALE = 0.6f; // Scale factor for level 2 camera
+    public static final float LEVEL2_PLAYER_SCALE = 0.45f; // Scale factor for level 2 player
     private float viewportWidth;
     private float viewportHeight;
 
@@ -486,12 +486,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                     // Spawn position in room 2 (bottom-left corner)
                     float spawnX = 513.32f + 12.5f; // Room 2 x + PLAYER_WIDTH
                     float spawnY = 16.01f + 17.0f;  // Room 2 y + PLAYER_HEIGHT
-                    
+
                     IceSpirit spirit = new IceSpirit(spawnX, spawnY);
                     spirit.setTexture(iceSpiritTexture);
                     spirit.setTarget(player);
                     iceSpirits.add(spirit);
-                    
+
                     iceSpiritSpawnTimer = 0f;
                     iceSpiritsSpawned++;
                 }
@@ -702,6 +702,8 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         player.setLevel2Areas();
         player.setScale(LEVEL2_PLAYER_SCALE);
         player.setPosition(new Vector2(100, 100));
+        player.restoreFullHealth();
+        player.setSpeed(400f);
         potions.clear();
 
         // Create and initialize Ice Knight mini-boss

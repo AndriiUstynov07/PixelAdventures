@@ -9,7 +9,7 @@ import com.pixelteam.adventures.utils.Stats;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
 
 public class MiniBossIceKnight extends Boss {
-    private static final float MINI_BOSS_SIZE = 80f; // Reduced from 105f to 80f
+    private static final float MINI_BOSS_SIZE = 35f; // Reduced from 105f to 80f
     private static final int MINI_BOSS_HEALTH = 300;
     private static final float MINI_BOSS_SPEED = 40f;
     private static final float ATTACK_RANGE = 50f;
@@ -289,20 +289,20 @@ public class MiniBossIceKnight extends Boss {
     private void renderWeapon(SpriteBatch batch) {
         if (weapon == null || weapon.getTexture() == null) return;
 
-        float weaponWidth = weapon.getWidth() * 0.7f;
-        float weaponHeight = weapon.getHeight() * 0.7f;
+        float weaponWidth = weapon.getWidth() * 0.5f;
+        float weaponHeight = weapon.getHeight() * 0.5f;
 
         float offsetX;
         float offsetY;
         float totalRotation;
 
         if (facingLeft) {
-            offsetX = -27.0f;
-            offsetY = -7.0f;
+            offsetX = -13.5f;
+            offsetY = -3.5f;
             totalRotation = weaponRotation + weaponAttackAnimation;
         } else {
-            offsetX = 27.0f;
-            offsetY = -7.0f;
+            offsetX = 13.5f;
+            offsetY = -3.5f;
             totalRotation = weaponRotation - weaponAttackAnimation;
         }
 
@@ -321,8 +321,8 @@ public class MiniBossIceKnight extends Boss {
     }
 
     private void renderHealthBar(SpriteBatch batch) {
-        float barWidth = 70f;
-        float barHeight = 8f;
+        float barWidth = 35f;
+        float barHeight = 4f;
         float barOffsetY = height;
 
         float barX = position.x + (width - barWidth) / 2f;
@@ -414,11 +414,11 @@ public class MiniBossIceKnight extends Boss {
         float offsetY;
 
         if (facingLeft) {
-            offsetX = -20.0f;
-            offsetY = -5.0f;
+            offsetX = -10.0f;
+            offsetY = -2.5f;
         } else {
-            offsetX = 20.0f;
-            offsetY = -5.0f;
+            offsetX = 10.0f;
+            offsetY = -2.5f;
         }
 
         float weaponX = position.x + width / 2.0f + offsetX - weaponWidth / 2.0f;
@@ -440,7 +440,7 @@ public class MiniBossIceKnight extends Boss {
         collisionStunTimer = COLLISION_STUN_DURATION;
         isStunnedFromCollision = true;
         velocity.set(0, 0);
-        
+
         if (target != null) {
             Rectangle playerBounds = target.getBounds();
             Vector2 pushDirection = new Vector2(playerBounds.x + playerBounds.width / 2 - position.x, playerBounds.y + playerBounds.height / 2 - position.y).nor();

@@ -992,12 +992,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         traps.add(new Trap(corridorX+30f, startY + gap, trapSize, 70, trapTexture));
         traps.add(new Trap(corridorX, startY + 2 * gap, trapSize, 70, trapTexture));
 
-        float corridor2X = 237.92f;
+        float corridor2X = 327.92f;
         float corridor2Y = 65.94f;
-        float gap2 = 50f;
+        float gap2 = 60f;
 
-        traps.add(new Trap(corridor2X+4*gap2, corridor2Y-7f, trapSize, 70, trapTexture));
-        traps.add(new Trap(corridor2X+3*gap2, corridor2Y+15f, trapSize, 70, trapTexture));
+        traps.add(new Trap(corridor2X, corridor2Y-7f, trapSize, 70, trapTexture));
+        traps.add(new Trap(corridor2X+gap2, corridor2Y+15f, trapSize, 70, trapTexture));
         traps.add(new Trap(corridor2X+2*gap2, corridor2Y-7f, trapSize, 70, trapTexture));
     }
 

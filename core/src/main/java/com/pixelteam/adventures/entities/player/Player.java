@@ -121,9 +121,9 @@ public class Player extends Character {
         // Room 1
         playableAreas.add(new Rectangle(
             950.17f + PLAYER_WIDTH,
-            45.91f + PLAYER_HEIGHT,
+            45.91f ,
             96.69f - PLAYER_WIDTH,
-            63.86f
+            63.86f 
         ));
 
         // Passage 1 (горизонтальний)
@@ -185,9 +185,9 @@ public class Player extends Character {
         // Room 5
         playableAreas.add(new Rectangle(
             190.37f + PLAYER_WIDTH,
-            238.34f,
-            143.16f - PLAYER_WIDTH,
-            120.62f
+            238.34f + PLAYER_HEIGHT,
+            143.16f - 2*PLAYER_WIDTH,
+            120.62f - PLAYER_HEIGHT
         ));
 
         // Passage 5 (вертикальний)

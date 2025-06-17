@@ -123,7 +123,7 @@ public class Player extends Character {
             950.17f + PLAYER_WIDTH,
             45.91f ,
             96.69f - PLAYER_WIDTH,
-            63.86f 
+            63.86f
         ));
 
         // Passage 1 (горизонтальний)
@@ -223,119 +223,13 @@ public class Player extends Character {
     public void setLevel3Areas() {
         playableAreas.clear();
 
-        final float PLAYER_WIDTH = 12.5f;
-        final float PLAYER_HEIGHT = 17.0f;
-
-        // Room 1 (top left)
+        // Create a single large rectangle that covers the entire map
+        // This allows the player to move freely on level 3
         playableAreas.add(new Rectangle(
-            100f + PLAYER_WIDTH,
-            500f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Room 2 (top center)
-        playableAreas.add(new Rectangle(
-            350f + PLAYER_WIDTH,
-            500f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Room 3 (top right)
-        playableAreas.add(new Rectangle(
-            600f + PLAYER_WIDTH,
-            500f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Room 4 (middle left)
-        playableAreas.add(new Rectangle(
-            100f + PLAYER_WIDTH,
-            300f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Room 5 (middle center)
-        playableAreas.add(new Rectangle(
-            350f + PLAYER_WIDTH,
-            300f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Room 6 (middle right)
-        playableAreas.add(new Rectangle(
-            600f + PLAYER_WIDTH,
-            300f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Room 7 (bottom left)
-        playableAreas.add(new Rectangle(
-            100f + PLAYER_WIDTH,
-            100f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Room 8 (bottom center)
-        playableAreas.add(new Rectangle(
-            350f + PLAYER_WIDTH,
-            100f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Room 9 (bottom right)
-        playableAreas.add(new Rectangle(
-            600f + PLAYER_WIDTH,
-            100f + PLAYER_HEIGHT,
-            150f - PLAYER_WIDTH,
-            100f - PLAYER_HEIGHT
-        ));
-
-        // Horizontal corridor 1 (connecting top rooms)
-        playableAreas.add(new Rectangle(
-            250f,
-            530f,
-            100f,
-            40f
-        ));
-
-        // Horizontal corridor 2 (connecting middle rooms)
-        playableAreas.add(new Rectangle(
-            250f,
-            330f,
-            100f,
-            40f
-        ));
-
-        // Horizontal corridor 3 (connecting bottom rooms)
-        playableAreas.add(new Rectangle(
-            250f,
-            130f,
-            100f,
-            40f
-        ));
-
-        // Vertical corridor 1 (connecting left rooms)
-        playableAreas.add(new Rectangle(
-            150f,
-            200f,
-            50f,
-            100f
-        ));
-
-        // Vertical corridor 2 (connecting right rooms)
-        playableAreas.add(new Rectangle(
-            650f,
-            200f,
-            50f,
-            100f
+            0f,  // x - left edge of the map
+            0f,  // y - bottom edge of the map
+            1280f, // width - full map width
+            720f   // height - full map height
         ));
 
         // Set speed for level 3 (same as level 2)

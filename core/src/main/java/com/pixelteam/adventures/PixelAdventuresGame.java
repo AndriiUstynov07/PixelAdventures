@@ -98,7 +98,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private float iceSpiritSpawnTimer;
     private static final float ICE_SPIRIT_SPAWN_INTERVAL = 1.3f;
     private int iceSpiritsSpawned;
-    private static final int MAX_ICE_SPIRITS = 7;
+    private static final int MAX_ICE_SPIRITS = 5;
 
     @Override
     public void create() {
@@ -601,23 +601,22 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
 
         // Update ice spirit spawn timer and spawn new spirits
-        if (iceSpirits != null && iceSpiritsSpawned < MAX_ICE_SPIRITS) {
-            // Check if player is in room 2
+        if (isLevel2 && iceSpirits != null && iceSpiritsSpawned < MAX_ICE_SPIRITS) {
+            // Check if player is in room 2 (bottom central room)
             boolean isPlayerInRoom2 = false;
-            boolean isPlayerInRoom5 = false;
-            for (Rectangle area : player.getPlayableAreas()) {
-                if (area.x == 513.32f + 16.25f && // Room 2 coordinates
-                    area.y == 24.01f + 22.1f &&
-                    player.getBounds().overlaps(area)) {
-                    isPlayerInRoom2 = true;
-                    break;
-                }
-                if (area.x == 190.37f + 16.25f && // Room 2 coordinates
-                        area.y == 238.34f + 22.1f &&
-                        player.getBounds().overlaps(area)) {
-                    isPlayerInRoom5 = true;
-                    break;
-                }
+
+            // Define Room 2 bounds based on initializeLevel2PlayableAreas
+            Rectangle room2Bounds = new Rectangle(
+                513.32f + 12.5f, // x (from initializeLevel2PlayableAreas)
+                24.01f,         // y (from initializeLevel2PlayableAreas)
+                235.62f - 12.5f, // width (from initializeLevel2PlayableAreas)
+                89.04f          // height (from initializeLevel2PlayableAreas)
+            );
+
+            // Check if player overlaps with Room 2
+            if (player.getBounds().overlaps(room2Bounds)) {
+                isPlayerInRoom2 = true;
+                System.out.println("Player is in Room 2!");
             }
 
             if (isPlayerInRoom2) {
@@ -626,21 +625,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                     // Spawn position in room 2 (bottom-left corner)
                     float spawnX = 513.32f + 12.5f; // Room 2 x + PLAYER_WIDTH
                     float spawnY = 16.01f + 17.0f;  // Room 2 y + PLAYER_HEIGHT
-
-                    IceSpirit spirit = new IceSpirit(spawnX, spawnY);
-                    spirit.setTexture(iceSpiritTexture);
-                    spirit.setTarget(player);
-                    iceSpirits.add(spirit);
-
-                    iceSpiritSpawnTimer = 0f;
-                    iceSpiritsSpawned++;
-                }
-            }
-            if (isPlayerInRoom5) {
-                iceSpiritSpawnTimer += deltaTime;
-                if (iceSpiritSpawnTimer >= ICE_SPIRIT_SPAWN_INTERVAL) {
-                    float spawnX = 190.37f + 12.5f; // Room 2 x + PLAYER_WIDTH
-                    float spawnY = 238.34f + 17.0f;  // Room 2 y + PLAYER_HEIGHT
 
                     IceSpirit spirit = new IceSpirit(spawnX, spawnY);
                     spirit.setTexture(iceSpiritTexture);

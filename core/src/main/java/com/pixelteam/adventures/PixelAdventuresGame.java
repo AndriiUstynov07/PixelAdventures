@@ -155,15 +155,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             player.setTexture(playerTexture);
         }
         // Створення меча
-        if (Gdx.files.internal("images/weapons/sword.png").exists()) {
-            sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
-        } else if (Gdx.files.internal("sword.png").exists()) {
-            sword = new MeleeWeapon("Sword", 100, 1.0f, "sword.png");
-        } else {
-            sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
-        }
-
-        // Екіпіровка меча гравцем
+        sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
         player.equipWeapon(sword);
 
         // Створення головного боса в правій кімнаті
@@ -707,12 +699,15 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         batch.end();
     }
 
+
+
     private void checkPlayerBossCollision(DragonBoss boss) {
         // Перевіряємо колізію тільки якщо обидва живі
         if (!player.isAlive() || !boss.isAlive()) return;
 
+        // Перевіряємо колізію з тілом боса (тільки відштовхування)
         if (player.getBounds().overlaps(boss.getBounds())) {
-            // Розрахунок вектора відштовхуванняdd
+            // Розрахунок вектора відштовхування
             Vector2 playerCenter = new Vector2(
                 player.getPosition().x + player.getWidth() / 2,
                 player.getPosition().y + player.getHeight() / 2
@@ -730,6 +725,52 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
             // Додаткова перевірка меж після відштовхування
             player.checkBounds();
+        }
+
+        // Перевіряємо колізію зі зброєю боса
+        Rectangle weaponBounds = boss.getBossWeaponBounds();
+        if (weaponBounds != null) {
+            // Зміщуємо хітбокс зброї далі від центру боса
+            float weaponOffset = 40f; // Зміщення зброї від центру
+            if (boss.isFacingLeft()) {
+                weaponBounds.x -= weaponOffset;
+            } else {
+                weaponBounds.x += weaponOffset;
+            }
+
+            if (player.getBounds().overlaps(weaponBounds)) {
+                // Check if the boss is facing the player
+                boolean isFacingPlayer = (boss.isFacingLeft() && player.getPosition().x < boss.getPosition().x) ||
+                                       (!boss.isFacingLeft() && player.getPosition().x > boss.getPosition().x);
+
+                // Calculate distance between player and boss
+                float distance = player.getPosition().dst(boss.getPosition());
+                float minDamageDistance = 25f;
+
+                // Додаткова перевірка, чи гравець дійсно знаходиться в зоні атаки
+                boolean isInAttackRange = distance <= minDamageDistance &&
+                                        Math.abs(player.getPosition().y - boss.getPosition().y) < 20f;
+
+                // Перевіряємо, чи зброя дійсно знаходиться в правильній позиції для атаки
+                boolean isWeaponInAttackPosition = false;
+                if (boss.isFacingLeft()) {
+                    isWeaponInAttackPosition = weaponBounds.x < boss.getPosition().x;
+                } else {
+                    isWeaponInAttackPosition = weaponBounds.x > boss.getPosition().x;
+                }
+
+                if (boss.isAttacking() &&
+                    player.getDamageCooldown() <= 0 &&
+                    isFacingPlayer &&
+                    isInAttackRange &&
+                    isWeaponInAttackPosition) {
+                    MeleeWeapon weapon = boss.getWeapon();
+                    if (weapon != null) {
+                        player.takeDamage(weapon.getDamage());
+                        player.setDamageCooldown(1.0f);
+                    }
+                }
+            }
         }
     }
 
@@ -750,6 +791,33 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             float pushDistance = 5.0f;
             player.getPosition().add(pushDirection.scl(pushDistance));
             player.checkBounds();
+        }
+
+        // Check collision with weapon
+        Rectangle weaponBounds = iceBoss.getBossWeaponBounds();
+        if (weaponBounds != null && player.getBounds().overlaps(weaponBounds)) {
+            boolean isFacingPlayer = isBossFacingPlayer(iceBoss, player);
+            float distance = player.getPosition().dst(iceBoss.getPosition());
+            float minDamageDistance = 15f;
+            boolean isInAttackRange = distance <= minDamageDistance &&
+                                    Math.abs(player.getPosition().y - iceBoss.getPosition().y) < 10f;
+            boolean isWeaponInAttackPosition = false;
+            if (iceBoss.isFacingLeft()) {
+                isWeaponInAttackPosition = weaponBounds.x < iceBoss.getPosition().x;
+            } else {
+                isWeaponInAttackPosition = weaponBounds.x > iceBoss.getPosition().x;
+            }
+            if (iceBoss.isAttacking() &&
+                player.getDamageCooldown() <= 0 &&
+                isFacingPlayer &&
+                isInAttackRange &&
+                isWeaponInAttackPosition) {
+                MeleeWeapon weapon = iceBoss.getWeapon();
+                if (weapon != null) {
+                    player.takeDamage(weapon.getDamage());
+                    player.setDamageCooldown(1.0f);
+                }
+            }
         }
     }
 
@@ -777,51 +845,98 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             // Додаткова перевірка меж після відштовхування
             player.checkBounds();
         }
-    }
 
-    private void checkPlayerIceKnightCollision() {
-        if (player != null && miniBossIceKnight != null && miniBossIceKnight.isAlive()) {
-            // Перевіряємо колізію з тілом боса
-            if (player.getBounds().overlaps(miniBossIceKnight.getBounds())) {
-                // Викликаємо метод обробки колізії у боса
-                miniBossIceKnight.onCollisionWithPlayer();
-            }
+        // Перевіряємо колізію зі зброєю міні-боса
+        Rectangle weaponBounds = miniBossFirst.getBossWeaponBounds();
+        if (weaponBounds != null && player.getBounds().overlaps(weaponBounds)) {
+            // Check if the boss is facing the player
+            boolean isFacingPlayer = (miniBossFirst.isFacingLeft() && player.getPosition().x < miniBossFirst.getPosition().x) ||
+                                   (!miniBossFirst.isFacingLeft() && player.getPosition().x > miniBossFirst.getPosition().x);
 
-            // Перевіряємо колізію зі зброєю боса
-            Rectangle weaponBounds = miniBossIceKnight.getBossWeaponBounds();
-            if (weaponBounds != null && player.getBounds().overlaps(weaponBounds)) {
-                // Check if the boss is facing the player
-                boolean isFacingPlayer = isBossFacingPlayer(miniBossIceKnight, player);
+            // Calculate distance between player and boss
+            float distance = player.getPosition().dst(miniBossFirst.getPosition());
+            float minDamageDistance = 25f; // Збільшуємо дистанцію для першого рівня
 
-                // Calculate distance between player and boss
-                float distance = player.getPosition().dst(miniBossIceKnight.getPosition());
-                float minDamageDistance = 15f; // Зменшено до 15f для більш точного визначення дистанції
+            // Додаткова перевірка, чи гравець дійсно знаходиться в зоні атаки
+            boolean isInAttackRange = distance <= minDamageDistance &&
+                                    Math.abs(player.getPosition().y - miniBossFirst.getPosition().y) < 20f;
 
-                // Додаткова перевірка, чи гравець дійсно знаходиться в зоні атаки
-                boolean isInAttackRange = distance <= minDamageDistance &&
-                                        Math.abs(player.getPosition().y - miniBossIceKnight.getPosition().y) < 10f;
-
-                // Перевіряємо, чи зброя дійсно знаходиться в правильній позиції для атаки
-                boolean isWeaponInAttackPosition = false;
-                if (miniBossIceKnight.isFacingLeft()) {
-                    isWeaponInAttackPosition = weaponBounds.x < miniBossIceKnight.getPosition().x;
-                } else {
-                    isWeaponInAttackPosition = weaponBounds.x > miniBossIceKnight.getPosition().x;
-                }
-
-                if (miniBossIceKnight.isAttacking() &&
-                    player.getDamageCooldown() <= 0 &&
-                    isFacingPlayer &&
-                    isInAttackRange &&
-                    isWeaponInAttackPosition) {
-                    MeleeWeapon weapon = miniBossIceKnight.getWeapon();
-                    if (weapon != null) {
-                        player.takeDamage(weapon.getDamage());
-                        player.setDamageCooldown(1.0f);
-                    }
+            if (miniBossFirst.isAttacking() &&
+                player.getDamageCooldown() <= 0 &&
+                isFacingPlayer &&
+                isInAttackRange) {
+                MeleeWeapon weapon = miniBossFirst.getWeapon();
+                if (weapon != null) {
+                    player.takeDamage(weapon.getDamage());
+                    player.setDamageCooldown(1.0f);
                 }
             }
         }
+    }
+
+    private void checkPlayerIceKnightCollision() {
+        // Check collision only if both are alive
+        if (!player.isAlive() || miniBossIceKnight == null || !miniBossIceKnight.isAlive()) return;
+
+        // Push player away if colliding with body
+        if (player.getBounds().overlaps(miniBossIceKnight.getBounds())) {
+            Vector2 playerCenter = new Vector2(
+                player.getPosition().x + player.getWidth() / 2,
+                player.getPosition().y + player.getHeight() / 2
+            );
+            Vector2 bossCenter = new Vector2(
+                miniBossIceKnight.getPosition().x + miniBossIceKnight.getWidth() / 2,
+                miniBossIceKnight.getPosition().y + miniBossIceKnight.getHeight() / 2
+            );
+            Vector2 pushDirection = playerCenter.sub(bossCenter).nor();
+            float pushDistance = 5.0f;
+            player.getPosition().add(pushDirection.scl(pushDistance));
+            player.checkBounds();
+        }
+
+        // Check collision with weapon
+        Rectangle weaponBounds = miniBossIceKnight.getBossWeaponBounds();
+        if (weaponBounds != null && player.getBounds().overlaps(weaponBounds)) {
+            boolean isFacingPlayer = isBossFacingPlayer(miniBossIceKnight, player);
+            float distance = player.getPosition().dst(miniBossIceKnight.getPosition());
+            float minDamageDistance = 20f;
+            boolean isInAttackRange = distance <= minDamageDistance &&
+                                    Math.abs(player.getPosition().y - miniBossIceKnight.getPosition().y) < 10f;
+            boolean isWeaponInAttackPosition = false;
+            if (miniBossIceKnight.isFacingLeft()) {
+                isWeaponInAttackPosition = weaponBounds.x < miniBossIceKnight.getPosition().x;
+            } else {
+                isWeaponInAttackPosition = weaponBounds.x > miniBossIceKnight.getPosition().x;
+            }
+            if (miniBossIceKnight.isAttacking() &&
+                player.getDamageCooldown() <= 0 &&
+                isFacingPlayer &&
+                isInAttackRange &&
+                isWeaponInAttackPosition) {
+                MeleeWeapon weapon = miniBossIceKnight.getWeapon();
+                if (weapon != null) {
+                    player.takeDamage(weapon.getDamage());
+                    player.setDamageCooldown(1.0f);
+                }
+            }
+        }
+    }
+
+    // Helper method to check if the boss is facing the player (MiniBossIceKnight version)
+    private boolean isBossFacingPlayer(MiniBossIceKnight boss, Player player) {
+        Vector2 bossPosition = boss.getPosition();
+        Vector2 playerPosition = player.getPosition();
+        boolean isBossFacingLeft = boss.isFacingLeft();
+        boolean isPlayerToLeft = playerPosition.x < bossPosition.x;
+        return (isBossFacingLeft && isPlayerToLeft) || (!isBossFacingLeft && !isPlayerToLeft);
+    }
+    // Overload for IceBoss
+    private boolean isBossFacingPlayer(IceBoss boss, Player player) {
+        Vector2 bossPosition = boss.getPosition();
+        Vector2 playerPosition = player.getPosition();
+        boolean isBossFacingLeft = boss.isFacingLeft();
+        boolean isPlayerToLeft = playerPosition.x < bossPosition.x;
+        return (isBossFacingLeft && isPlayerToLeft) || (!isBossFacingLeft && !isPlayerToLeft);
     }
 
     @Override
@@ -896,24 +1011,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
     }
 
-    // Helper method to check if the boss is facing the player
-    private boolean isBossFacingPlayer(MiniBossIceKnight boss, Player player) {
-        // Get the positions of the boss and player
-        Vector2 bossPosition = boss.getPosition();
-        Vector2 playerPosition = player.getPosition();
-
-        // Check if the boss is facing left or right
-        boolean isBossFacingLeft = boss.isFacingLeft();
-
-        // Determine if the player is to the left or right of the boss
-        boolean isPlayerToLeft = playerPosition.x < bossPosition.x;
-
-        // The boss is facing the player if:
-        // - The boss is facing left AND the player is to the left of the boss, OR
-        // - The boss is NOT facing left AND the player is NOT to the left of the boss
-        return (isBossFacingLeft && isPlayerToLeft) || (!isBossFacingLeft && !isPlayerToLeft);
-    }
-
     public void setLevel2() {
         isLevel2 = true;
         player.setLevel2Areas();
@@ -924,6 +1021,20 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         potions.clear();
         potions.add(new HealthPotion(260f, 70f, 20, 100, potionTexture));
         potions.add(new HealthPotion(260f, 300f, 20, 100, potionTexture));
+
+        // Make sure player always has a sword
+        if (player.getWeapon() == null) {
+            if (sword == null) {
+                if (Gdx.files.internal("images/weapons/sword.png").exists()) {
+                    sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
+                } else if (Gdx.files.internal("sword.png").exists()) {
+                    sword = new MeleeWeapon("Sword", 100, 1.0f, "sword.png");
+                } else {
+                    sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
+                }
+            }
+            player.equipWeapon(sword);
+        }
 
         // Create and initialize Ice Boss in room 6
         float iceBossX = 580.76f + (100.86f - 64f) / 2f;
@@ -1035,6 +1146,20 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Restore player's health to full
         player.restoreFullHealth();
+
+        // Make sure player always has a sword
+        if (player.getWeapon() == null) {
+            if (sword == null) {
+                if (Gdx.files.internal("images/weapons/sword.png").exists()) {
+                    sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
+                } else if (Gdx.files.internal("sword.png").exists()) {
+                    sword = new MeleeWeapon("Sword", 100, 1.0f, "sword.png");
+                } else {
+                    sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
+                }
+            }
+            player.equipWeapon(sword);
+        }
 
         // Set level 3 playable areas to cover the entire map
         player.setLevel3Areas();

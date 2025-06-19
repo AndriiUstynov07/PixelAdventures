@@ -512,4 +512,15 @@ public class IceBoss extends Boss {
     public boolean isFacingLeft() {
         return this.facingLeft;
     }
+
+    public Rectangle getBossWeaponBounds() {
+        if (weapon != null) {
+            return weapon.getBounds();
+        }
+        return null;
+    }
+
+    public boolean isAttacking() {
+        return isAttacking;
+    }
 }

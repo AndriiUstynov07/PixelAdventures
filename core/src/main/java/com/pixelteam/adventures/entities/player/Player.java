@@ -37,6 +37,9 @@ public class Player extends Character {
 
     private float scale = 1.0f;
 
+    // Додаємо поле для зброї гравця
+    private Weapon currentWeapon;
+
     public Player(float x, float y) {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0.0F, 0.0F);
@@ -207,10 +210,37 @@ public class Player extends Character {
         ));
     }
 
-
-
-
-
+    private void initializeLevel3PlayableAreas() {
+        playableAreas.clear();
+        // 1 кімната
+        playableAreas.add(new Rectangle(937, 257, 1208 - 937, 407 - 257));
+        // 2 кімната
+        playableAreas.add(new Rectangle(1068, 102, 1112 - 1068, 257 - 102));
+        // 3 кімната
+        playableAreas.add(new Rectangle(600, 102, 1068 - 600, 135 - 102));
+        // 4 кімната
+        playableAreas.add(new Rectangle(374, 42, 600 - 374, 136 - 42));
+        // 5 кімната
+        playableAreas.add(new Rectangle(615, 135, 650 - 615, 257 - 135));
+        // 6 кімната
+        playableAreas.add(new Rectangle(495, 256, 780 - 495, 399 - 256));
+        // 7 кімната
+        playableAreas.add(new Rectangle(335, 317, 495 - 335, 351 - 317));
+        // 8 кімната
+        playableAreas.add(new Rectangle(57, 255, 335 - 57, 407 - 255));
+        // 9 кімната
+        playableAreas.add(new Rectangle(615, 399, 650 - 615, 528 - 399));
+        // 10 кімната
+        playableAreas.add(new Rectangle(497, 528, 780 - 497, 677 - 528));
+        // 11 кімната
+        playableAreas.add(new Rectangle(337, 587, 497 - 337, 619 - 587));
+        // 12 кімната
+        playableAreas.add(new Rectangle(59, 528, 337 - 59, 680 - 528));
+        // 13 кімната
+        playableAreas.add(new Rectangle(780, 587, 934 - 780, 619 - 587));
+        // 14 кімната
+        playableAreas.add(new Rectangle(934, 527, 1205 - 934, 679 - 527));
+    }
 
     public void setLevel2Areas() {
         // Автоматично згенерувати allowed zones з map2.png
@@ -221,22 +251,9 @@ public class Player extends Character {
     }
 
     public void setLevel3Areas() {
-        playableAreas.clear();
-
-        // Create a single large rectangle that covers the entire map
-        // This allows the player to move freely on level 3
-        playableAreas.add(new Rectangle(
-            0f,  // x - left edge of the map
-            0f,  // y - bottom edge of the map
-            1280f, // width - full map width
-            720f   // height - full map height
-        ));
-
+        initializeLevel3PlayableAreas();
         // Set speed for level 3 (same as level 2)
         this.speed = 200f / 3f;
-
-        // Output player coordinates to console when moving
-        System.out.println("Player position: " + this.position.x + ", " + this.position.y);
     }
 
     public void setLevel1Areas() {
@@ -393,9 +410,9 @@ public class Player extends Character {
             weaponHeight + 10
         );
     }
+    @Override
     public void render(SpriteBatch batch) {
         // Встановлюємо повну непрозорість для всіх наступних об'єктів у цьому batch
-        // Це забезпечить, що гравець і його зброя будуть повністю непрозорими.
         batch.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         // Малюємо текстуру гравця, тільки якщо гравець живий
@@ -413,25 +430,29 @@ public class Player extends Character {
         }
 
         // Малюємо зброю, тільки якщо гравець живий і має зброю
-        if (this.alive && this.currentWeapon != null) {
-            float offsetX;
-            float offsetY;
-            float totalRotation;
+        if (this.alive) {
+            if (this.currentWeapon != null) {
+                float offsetX;
+                float offsetY;
+                float totalRotation;
 
-            if (this.facingLeft) {
-                offsetX = -23.0F * scale;
-                offsetY = -1.0F * scale;
-                totalRotation = 5.0F + this.swordAttackAnimation;
+                if (this.facingLeft) {
+                    offsetX = -23.0F * scale;
+                    offsetY = -1.0F * scale;
+                    totalRotation = 5.0F + this.swordAttackAnimation;
+                } else {
+                    offsetX = 23.0F * scale;
+                    offsetY = -1.0F * scale;
+                    totalRotation = this.swordRotation - this.swordAttackAnimation;
+                }
+
+                float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
+                float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
+
+                this.currentWeapon.render(batch, swordX, swordY, totalRotation);
             } else {
-                offsetX = 23.0F * scale;
-                offsetY = -1.0F * scale;
-                totalRotation = this.swordRotation - this.swordAttackAnimation;
+                System.out.println("Warning: Player weapon is null in render method");
             }
-
-            float swordX = this.position.x + this.width / 2.0F + offsetX - this.currentWeapon.getWidth() / 2.0F;
-            float swordY = this.position.y + this.height / 2.0F + offsetY - this.currentWeapon.getHeight() / 2.0F;
-
-            this.currentWeapon.render(batch, swordX, swordY, totalRotation);
         }
         // Дуже важливо: повертаємо колір batch на повну непрозорість (білий)
         // після малювання гравця та зброї, щоб не впливати на інші об'єкти.
@@ -454,7 +475,6 @@ public class Player extends Character {
             this.attackCooldown = 0.5F;
             Vector2 target = new Vector2((float)Gdx.input.getX(), (float)(Gdx.graphics.getHeight() - Gdx.input.getY()));
             this.currentWeapon.attack(this, target);
-
             // Перевіряємо чи атакуємо боса
             checkBossAttack();
         }

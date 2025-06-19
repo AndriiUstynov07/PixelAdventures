@@ -62,6 +62,9 @@ public abstract class Weapon {
                 0, 0,
                 texture.getWidth(), texture.getHeight(),
                 false, false);
+        } else {
+            // If texture is null, print a debug message
+            System.out.println("Warning: Weapon texture is null in render method");
         }
     }
 }

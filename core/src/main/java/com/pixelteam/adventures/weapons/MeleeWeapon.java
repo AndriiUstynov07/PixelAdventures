@@ -2,6 +2,7 @@ package com.pixelteam.adventures.weapons;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.pixelteam.adventures.entities.Character;
 
@@ -11,6 +12,11 @@ public class MeleeWeapon extends Weapon {
     private boolean attacking;
     private float attackRotation;
     private float attackTimer;
+    private Texture texture;
+    private float scale = 1.0f;
+    private Vector2 position = new Vector2();
+    private static final float WEAPON_WIDTH = 16f;  // Зменшуємо ширину зброї
+    private static final float WEAPON_HEIGHT = 16f; // Зменшуємо висоту зброї
 
     public MeleeWeapon(String name, int damage, float attackSpeed, String texturePath) {
         this.name = name;
@@ -24,9 +30,14 @@ public class MeleeWeapon extends Weapon {
 
         // Try to load the texture from the specified path
         try {
+            System.out.println("Trying to load texture from path: " + texturePath);
             if (Gdx.files.internal(texturePath).exists()) {
                 this.texture = new Texture(Gdx.files.internal(texturePath));
+                // Assign to parent class's texture field
+                super.texture = this.texture;
+                System.out.println("Texture loaded successfully from: " + texturePath);
             } else {
+                System.out.println("Texture not found at: " + texturePath + ", trying alternative paths");
                 // Try alternative paths
                 String[] alternativePaths = {
                     "sword.png",
@@ -35,16 +46,57 @@ public class MeleeWeapon extends Weapon {
                     "assets/images/weapons/sword.png"
                 };
 
+                boolean textureLoaded = false;
                 for (String path : alternativePaths) {
+                    System.out.println("Trying alternative path: " + path);
                     if (Gdx.files.internal(path).exists()) {
                         this.texture = new Texture(Gdx.files.internal(path));
+                        // Assign to parent class's texture field
+                        super.texture = this.texture;
+                        System.out.println("Texture loaded successfully from alternative path: " + path);
+                        textureLoaded = true;
                         break;
+                    } else {
+                        System.out.println("Texture not found at alternative path: " + path);
                     }
+                }
+
+                // If no texture was loaded, create a fallback texture
+                if (!textureLoaded) {
+                    System.out.println("Creating fallback texture");
+                    // Create a 1x1 white texture as fallback
+                    com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+                    pixmap.setColor(1, 0, 0, 1); // Red color for visibility
+                    pixmap.fill();
+                    this.texture = new Texture(pixmap);
+                    // Assign to parent class's texture field
+                    super.texture = this.texture;
+                    pixmap.dispose();
+                    System.out.println("Fallback texture created");
                 }
             }
         } catch (Exception e) {
-            // Silently handle the exception
+            System.out.println("Error loading texture: " + e.getMessage());
+            e.printStackTrace();
+
+            // Create a fallback texture in case of error
+            System.out.println("Creating fallback texture after error");
+            try {
+                com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+                pixmap.setColor(1, 0, 0, 1); // Red color for visibility
+                pixmap.fill();
+                this.texture = new Texture(pixmap);
+                // Assign to parent class's texture field
+                super.texture = this.texture;
+                pixmap.dispose();
+                System.out.println("Fallback texture created after error");
+            } catch (Exception e2) {
+                System.out.println("Error creating fallback texture: " + e2.getMessage());
+                e2.printStackTrace();
+            }
         }
+
+        System.out.println("Texture after loading: " + this.texture);
 
         // Set dimensions based on loaded texture, or use defaults
         if (this.texture != null) {
@@ -55,6 +107,11 @@ public class MeleeWeapon extends Weapon {
                 this.width = 30;
                 this.height = 48;
             }
+        } else {
+            // Set default dimensions even if texture is null
+            System.out.println("Texture is null, setting default dimensions");
+            this.width = 30;
+            this.height = 48;
         }
 
         this.range = 100;
@@ -84,8 +141,8 @@ public class MeleeWeapon extends Weapon {
 
     @Override
     public void dispose() {
-        if (texture != null) {
-            texture.dispose();
+        if (super.texture != null) {
+            super.texture.dispose();
         }
     }
 
@@ -185,6 +242,8 @@ public class MeleeWeapon extends Weapon {
 
     public void setTexture(Texture texture) {
         this.texture = texture;
+        // Assign to parent class's texture field
+        super.texture = texture;
     }
 
     public void setRange(float range) {
@@ -209,5 +268,47 @@ public class MeleeWeapon extends Weapon {
 
     public float getAttackTimer() {
         return attackTimer;
+    }
+
+    public Rectangle getBounds() {
+        if (super.texture != null) {
+            // Використовуємо фіксовані розміри для колізії
+            float centerX = position.x + (super.texture.getWidth() * scale) / 2;
+            float centerY = position.y + (super.texture.getHeight() * scale) / 2;
+            return new Rectangle(
+                centerX - (WEAPON_WIDTH * scale) / 2,
+                centerY - (WEAPON_HEIGHT * scale) / 2,
+                WEAPON_WIDTH * scale,
+                WEAPON_HEIGHT * scale
+            );
+        }
+        return null;
+    }
+
+    public void setPosition(float x, float y) {
+        position.set(x, y);
+    }
+
+    public Vector2 getPosition() {
+        return position;
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
+
+        // Adjust dimensions based on level and scale
+        if (this.level == 2 || this.level == 3) {
+            // Smaller dimensions for levels 2 and 3
+            this.width = 10f * scale;
+            this.height = 20f * scale;
+        } else {
+            // Default dimensions for level 1
+            this.width = 30f * scale;
+            this.height = 48f * scale;
+        }
+    }
+
+    public float getScale() {
+        return scale;
     }
 }

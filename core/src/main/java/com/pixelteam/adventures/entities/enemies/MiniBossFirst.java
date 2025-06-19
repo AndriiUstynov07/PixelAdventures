@@ -577,4 +577,15 @@ public class MiniBossFirst extends Boss {
             pixelTexture = null;
         }
     }
+
+    public Rectangle getBossWeaponBounds() {
+        if (weapon != null) {
+            return weapon.getBounds();
+        }
+        return null;
+    }
+
+    public boolean isAttacking() {
+        return isAttacking;
+    }
 }

@@ -8,114 +8,27 @@ import com.pixelteam.adventures.entities.player.Player;
 import com.pixelteam.adventures.utils.Stats;
 import com.pixelteam.adventures.weapons.MeleeWeapon;
 
-public class DragonBoss extends Boss {
-    private static final float BOSS_SIZE = 128f; // Більший розмір для боса
-    private static final int BOSS_HEALTH = 500;
-    private static final float BOSS_SPEED = 50f;
+public class FireBoss extends DragonBoss {
+    private static final float FIRE_BOSS_SIZE = 84f;
+    private static final int FIRE_BOSS_HEALTH = 800;
+    private static final float FIRE_BOSS_SPEED = 90f;
     private static final float ATTACK_RANGE = 150f;
     private static final float ATTACK_COOLDOWN = 5.0f;
-    private static final float WEAPON_SWING_COOLDOWN = 5.0f; // Махання зброєю раз на секунду
+    private static final float WEAPON_SWING_COOLDOWN = 5.0f;
 
-    protected float attackTimer;
-    protected Player target;
-    protected boolean isMovingTowardsPlayer;
-    protected float phaseTimer;
-    private int swordHitCount; // Counter for sword hits
-    protected float damageCooldown; // Cooldown to prevent multiple hits in a single attack
-    protected MeleeWeapon weapon; // Зброя боса
-    protected float weaponSwingTimer; // Таймер для махання зброєю
-    protected boolean facingLeft; // Напрямок погляду боса
-    protected float weaponRotation; // Base rotation angle for weapon
-    protected boolean isAttacking; // Whether boss is currently attacking
-    protected float weaponAttackAnimation; // Animation progress for weapon attack
-    protected boolean weaponSwingDirection; // Direction of weapon swing (true = forward, false = backward)
-    protected static Texture pixelTexture;
-    private boolean isFireBoss = false; // Для розрізнення fireBoss від звичайного DragonBoss
+    public FireBoss(float x, float y) {
+        super(x, y);
+        // Встановлюємо специфічні параметри для FireBoss
+        this.width = FIRE_BOSS_SIZE;
+        this.height = FIRE_BOSS_SIZE;
+        this.health = FIRE_BOSS_HEALTH;
+        this.maxHealth = FIRE_BOSS_HEALTH;
+        this.speed = FIRE_BOSS_SPEED;
+        this.money = 700;
+        this.moneyDrop = 700;
+    }
 
-    // Implement the abstract method from GameObject
     @Override
-    public void update(float deltaTime) {
-        if (target != null) {
-            update(deltaTime, target);
-        } else {
-            // Basic update if no target
-            if (!alive || !active) return;
-
-            // Update attack timer
-            if (attackTimer > 0) {
-                attackTimer -= deltaTime;
-            }
-
-            // Update damage cooldown
-            if (damageCooldown > 0) {
-                damageCooldown -= deltaTime;
-            }
-
-            // Update weapon swing timer
-            if (weaponSwingTimer > 0) {
-                weaponSwingTimer -= deltaTime;
-            }
-
-            // Update weapon animation
-            updateWeaponAnimation(deltaTime);
-
-            // Update weapon
-            if (weapon != null) {
-                weapon.update(deltaTime);
-            }
-
-            // Update position
-            position.add(velocity.x * deltaTime, velocity.y * deltaTime);
-        }
-    }
-
-    // Implement the abstract method from Character
-    @Override
-    public void move(Vector2 direction) {
-        if (!alive || !active) return;
-
-        // Set velocity based on direction and speed
-        velocity.set(direction).nor().scl(speed);
-        System.out.println("FireBoss move() called: direction=" + direction + ", speed=" + speed + ", velocity=" + velocity);
-
-        // Визначення напрямку погляду
-        if (direction.x < 0) {
-            facingLeft = true;
-        } else if (direction.x > 0) {
-            facingLeft = false;
-        }
-    }
-
-    public DragonBoss(float x, float y) {
-        // Ініціалізуємо базові параметри
-        this.position = new Vector2(x, y);
-        this.velocity = new Vector2(0, 0);
-        this.width = BOSS_SIZE;
-        this.height = BOSS_SIZE;
-        this.health = BOSS_HEALTH;
-        this.maxHealth = BOSS_HEALTH;
-        this.speed = BOSS_SPEED;
-        this.alive = true;
-        this.active = true;
-        this.money = 1000; // Багато грошей за боса
-        this.moneyDrop = 1000;
-        this.stats = new Stats();
-
-        // Специфічні параметри боса
-        this.phase = 1;
-        this.attackTimer = 0f;
-        this.isMovingTowardsPlayer = false;
-        this.phaseTimer = 0f;
-        this.swordHitCount = 0; // Initialize sword hit counter
-        this.damageCooldown = 0f; // Initialize damage cooldown
-        this.weaponSwingTimer = 0f; // Initialize weapon swing timer
-        this.facingLeft = false; // Initially facing right
-        this.weaponRotation = 0f; // Initialize weapon base rotation
-        this.isAttacking = false; // Initialize attack state
-        this.weaponAttackAnimation = 0f; // Initialize attack animation
-        this.weaponSwingDirection = true; // Initialize swing direction
-    }
-
     public void update(float deltaTime, Player player) {
         if (!alive || !active) return;
 
@@ -141,10 +54,10 @@ public class DragonBoss extends Boss {
         if (weaponSwingTimer > 0) {
             weaponSwingTimer -= deltaTime;
         } else {
-            // Махати зброєю автоматично кожну секунду
+            // Махати зброєю автоматично
             if (weapon != null) {
                 weapon.startAttack();
-                isAttacking = true; // Start attack animation
+                isAttacking = true;
                 weaponSwingTimer = WEAPON_SWING_COOLDOWN;
             }
         }
@@ -157,101 +70,64 @@ public class DragonBoss extends Boss {
             weapon.update(deltaTime);
         }
 
-        // --- Відновлюємо AI та рух ---
-        updateAI(deltaTime);
+        // AI для FireBoss
+        updateFireBossAI(deltaTime);
 
         // Оновлення позиції
         position.add(velocity.x * deltaTime, velocity.y * deltaTime);
-        if (isFireBoss) {
-            constrainToRoom10();
-        } else {
-            constrainToRightRoom();
-        }
+        constrainToRoom10();
     }
 
-    private void updateAI(float deltaTime) {
+    private void updateFireBossAI(float deltaTime) {
         if (target == null) return;
-        if (isFireBoss) {
-            // Debug для fireBoss
-            System.out.println("FireBoss AI: isFireBoss=" + isFireBoss + ", playerInRoom=" + isPlayerInRoom10() + ", target=" + (target != null));
-            System.out.println("FireBoss position: " + position + ", target position: " + target.getPosition());
-            
-            // Логіка для fireBoss (кімната 10)
-            if (isPlayerInRoom10()) {
-                float distanceToPlayer = position.dst(target.getPosition());
-                System.out.println("FireBoss: distanceToPlayer=" + distanceToPlayer + ", ATTACK_RANGE=" + ATTACK_RANGE);
-                if (distanceToPlayer > ATTACK_RANGE) {
-                    System.out.println("FireBoss: Calling moveTowardsPlayer()");
-                    moveTowardsPlayer();
-                    isMovingTowardsPlayer = true;
-                    System.out.println("FireBoss: Moving towards player, velocity=" + velocity);
-                } else {
-                    velocity.set(0, 0);
-                    isMovingTowardsPlayer = false;
-                    if (attackTimer <= 0) {
-                        attack();
-                        attackTimer = ATTACK_COOLDOWN;
-                    }
-                }
+
+        float distanceToPlayer = position.dst(target.getPosition());
+
+        // Перевіряємо, чи гравець знаходиться в кімнаті 10
+        if (isPlayerInRoom10()) {
+            if (distanceToPlayer > ATTACK_RANGE) {
+                // Рухаємося до гравця
+                moveTowardsPlayer();
+                isMovingTowardsPlayer = true;
             } else {
-                // Гравець не в кімнаті 10, повертаємося в центр кімнати
-                System.out.println("FireBoss: Calling moveToRoom10Center()");
-                moveToRoom10Center();
-                isMovingTowardsPlayer = false;
-                System.out.println("FireBoss: Moving to center, velocity=" + velocity);
-            }
-        } else {
-            // Логіка для звичайного DragonBoss (права кімната)
-            if (isPlayerInRightRoom()) {
-                float distanceToPlayer = position.dst(target.getPosition());
-                if (distanceToPlayer > ATTACK_RANGE) {
-                    moveTowardsPlayer();
-                    isMovingTowardsPlayer = true;
-                } else {
-                    velocity.set(0, 0);
-                    isMovingTowardsPlayer = false;
-                    if (attackTimer <= 0) {
-                        attack();
-                        attackTimer = ATTACK_COOLDOWN;
-                    }
-                }
-            } else {
+                // В межах атаки
                 velocity.set(0, 0);
                 isMovingTowardsPlayer = false;
+
+                // Атакуємо якщо можемо
+                if (attackTimer <= 0) {
+                    attack();
+                    attackTimer = ATTACK_COOLDOWN;
+                }
             }
+        } else {
+            // Гравець не в кімнаті 10, повертаємося в центр кімнати
+            moveToRoom10Center();
+            isMovingTowardsPlayer = false;
         }
+
+        // Використовуємо здібності періодично
         if (phaseTimer > 3.0f) {
             useAbility();
             phaseTimer = 0f;
         }
     }
 
-    private boolean isPlayerInRightRoom() {
-        if (target == null) return false;
-        // Room bounds for right room (level 1)
-        float roomLeft = 835f;
-        float roomRight = 835f + 310f;
-        float roomBottom = 260f;
-        float roomTop = 260f + 165f;
-        Vector2 playerPos = target.getPosition();
-        float playerWidth = target.getWidth();
-        float playerHeight = target.getHeight();
-        return playerPos.x + playerWidth > roomLeft &&
-               playerPos.x < roomRight &&
-               playerPos.y + playerHeight > roomBottom &&
-               playerPos.y < roomTop;
-    }
-
     private boolean isPlayerInRoom10() {
         if (target == null) return false;
-        // Room 10 bounds
+
+        // Межі кімнати 10
         float roomLeft = 495f;
         float roomRight = 780f;
         float roomBottom = 575f;
         float roomTop = 732f;
+
+        // Отримуємо позицію гравця
         Vector2 playerPos = target.getPosition();
         float playerWidth = target.getWidth();
         float playerHeight = target.getHeight();
+
+        // Перевіряємо, чи гравець хоча б частково знаходиться в кімнаті 10
         return playerPos.x + playerWidth > roomLeft &&
                playerPos.x < roomRight &&
                playerPos.y + playerHeight > roomBottom &&
@@ -260,38 +136,42 @@ public class DragonBoss extends Boss {
 
     private void moveTowardsPlayer() {
         if (target == null) return;
+
         Vector2 direction = new Vector2(target.getPosition()).sub(position).nor();
         move(direction);
     }
 
-    private void constrainToRightRoom() {
-        float roomLeft = 835f;
-        float roomRight = 835f + 310f;
-        float roomBottom = 260f;
-        float roomTop = 260f + 165f;
-        if (position.x < roomLeft) {
-            position.x = roomLeft;
-            velocity.x = 0;
-        }
-        if (position.x + width > roomRight) {
-            position.x = roomRight - width;
-            velocity.x = 0;
-        }
-        if (position.y < roomBottom) {
-            position.y = roomBottom;
-            velocity.y = 0;
-        }
-        if (position.y + height > roomTop) {
-            position.y = roomTop - height;
-            velocity.y = 0;
-        }
-    }
-
-    private void constrainToRoom10() {
+    private void moveToRoom10Center() {
+        // Розраховуємо центр кімнати 10
         float roomLeft = 495f;
         float roomRight = 780f;
         float roomBottom = 575f;
         float roomTop = 732f;
+
+        float centerX = roomLeft + (roomRight - roomLeft) / 2f - width / 2f;
+        float centerY = roomBottom + (roomTop - roomBottom) / 2f - height / 2f;
+
+        // Розраховуємо напрямок до центру кімнати
+        Vector2 roomCenter = new Vector2(centerX, centerY);
+        Vector2 direction = new Vector2(roomCenter).sub(position).nor();
+
+        // Рухаємося до центру кімнати
+        if (position.dst(roomCenter) > 5f) { // Якщо відстань більше 5 пікселів
+            move(direction);
+        } else {
+            // Якщо ми вже в центрі, зупиняємося
+            velocity.set(0, 0);
+        }
+    }
+
+    private void constrainToRoom10() {
+        // Межі кімнати 10 для FireBoss
+        float roomLeft = 495f;
+        float roomRight = 780f;
+        float roomBottom = 575f;
+        float roomTop = 732f;
+
+        // Обмежуємо позицію FireBoss в межах кімнати 10
         if (position.x < roomLeft) {
             position.x = roomLeft;
             velocity.x = 0;
@@ -310,31 +190,10 @@ public class DragonBoss extends Boss {
         }
     }
 
-    private void updateWeaponAnimation(float deltaTime) {
-        // Weapon swing animation - 130 degrees swing
-        if (isAttacking) {
-            if (weaponSwingDirection) {
-                // Swing forward
-                weaponAttackAnimation += 800.0f * deltaTime; // Speed of swing
-                if (weaponAttackAnimation >= 130.0f) {
-                    weaponAttackAnimation = 130.0f;
-                    weaponSwingDirection = false; // Start swinging back
-                }
-            } else {
-                // Swing back to original position
-                weaponAttackAnimation -= 800.0f * deltaTime;
-                if (weaponAttackAnimation <= 0.0f) {
-                    weaponAttackAnimation = 0.0f;
-                    isAttacking = false;
-                    weaponSwingDirection = true; // Reset for next attack
-                }
-            }
-        }
-    }
-
+    @Override
     public void render(SpriteBatch batch) {
         if (texture != null && alive) {
-            // Малюємо боса з урахуванням напрямку
+            // Малюємо FireBoss з урахуванням напрямку
             if (facingLeft) {
                 // Відображаємо текстуру по горизонталі
                 batch.draw(texture, position.x + width, position.y, -width, height);
@@ -356,7 +215,7 @@ public class DragonBoss extends Boss {
     private void renderWeapon(SpriteBatch batch) {
         if (weapon == null || weapon.getTexture() == null) return;
 
-        // Розмір зброї (масштабуємо для боса через scale)
+        // Розмір зброї (масштабуємо для FireBoss)
         float weaponWidth = weapon.getWidth() * weapon.getScale();
         float weaponHeight = weapon.getHeight() * weapon.getScale();
 
@@ -420,10 +279,33 @@ public class DragonBoss extends Boss {
         batch.setColor(1f, 1f, 1f, 1f);
     }
 
+    private void updateWeaponAnimation(float deltaTime) {
+        // Weapon swing animation - 130 degrees swing
+        if (isAttacking) {
+            if (weaponSwingDirection) {
+                // Swing forward
+                weaponAttackAnimation += 800.0f * deltaTime; // Speed of swing
+                if (weaponAttackAnimation >= 130.0f) {
+                    weaponAttackAnimation = 130.0f;
+                    weaponSwingDirection = false; // Start swinging back
+                }
+            } else {
+                // Swing back to original position
+                weaponAttackAnimation -= 800.0f * deltaTime;
+                if (weaponAttackAnimation <= 0.0f) {
+                    weaponAttackAnimation = 0.0f;
+                    isAttacking = false;
+                    weaponSwingDirection = true; // Reset for next attack
+                }
+            }
+        }
+    }
+
+    @Override
     public void attack() {
         if (target == null) return;
 
-        // Простата атака - завдаємо шкоду якщо гравець поблизу
+        // Проста атака - завдаємо шкоду якщо гравець поблизу
         float distanceToPlayer = position.dst(target.getPosition());
 
         // Також запускаємо атаку зброї
@@ -453,14 +335,12 @@ public class DragonBoss extends Boss {
     @Override
     public void changePhase() {
         phase = 2;
-        speed = BOSS_SPEED * 1.5f; // Збільшуємо швидкість у другій фазі
-        // Можна додати ефекти зміни фази
+        speed = FIRE_BOSS_SPEED * 1.5f; // Збільшуємо швидкість у другій фазі
     }
 
     @Override
     public void dropLoot() {
         // Тут можна додати логіку випадання лутів
-        // Поки що босс просто дає багато грошей (вже встановлено в конструкторі)
     }
 
     @Override
@@ -482,6 +362,7 @@ public class DragonBoss extends Boss {
         alive = false;
         dropLoot();
     }
+
     private Texture getPixelTexture() {
         if (pixelTexture == null) {
             // Створюємо 1x1 білу текстуру
@@ -494,6 +375,7 @@ public class DragonBoss extends Boss {
         return pixelTexture;
     }
 
+    @Override
     public void dispose() {
         if (pixelTexture != null) {
             pixelTexture.dispose();
@@ -501,6 +383,7 @@ public class DragonBoss extends Boss {
         }
     }
 
+    @Override
     public Rectangle getBounds() {
         // Зменшуємо межі колізії, щоб гравець міг підійти ближче до боса
         float collisionMargin = 30f; // Зменшуємо межі на 30 пікселів з кожного боку
@@ -512,52 +395,62 @@ public class DragonBoss extends Boss {
         );
     }
 
-    // Метод для екіпірування зброї
+    @Override
     public void equipWeapon(MeleeWeapon weapon) {
         this.weapon = weapon;
     }
 
-    // Getters and Setters
+    @Override
     public boolean isMovingTowardsPlayer() {
         return isMovingTowardsPlayer;
     }
 
+    @Override
     public int getPhase() {
         return phase;
     }
 
+    @Override
     public Vector2 getPosition() {
         return position;
     }
 
+    @Override
     public void setTarget(Player target) {
         this.target = target;
     }
 
+    @Override
     public Player getTarget() {
         return this.target;
     }
 
+    @Override
     public boolean isAlive() {
         return this.alive;
     }
 
+    @Override
     public float getWidth() {
         return this.width;
     }
 
+    @Override
     public float getHeight() {
         return this.height;
     }
 
+    @Override
     public MeleeWeapon getWeapon() {
         return this.weapon;
     }
 
+    @Override
     public boolean isFacingLeft() {
         return this.facingLeft;
     }
 
+    @Override
     public Rectangle getBossWeaponBounds() {
         if (weapon != null) {
             return weapon.getBounds();
@@ -565,58 +458,43 @@ public class DragonBoss extends Boss {
         return null;
     }
 
+    @Override
     public boolean isAttacking() {
         return isAttacking;
     }
 
+    @Override
     public void setWidth(float width) {
         this.width = width;
     }
 
+    @Override
     public void setHeight(float height) {
         this.height = height;
     }
 
+    @Override
     public void setHealth(int health) {
         this.health = health;
     }
+
+    @Override
     public void setMaxHealth(int maxHealth) {
         this.maxHealth = maxHealth;
     }
+
+    @Override
     public void setSpeed(float speed) {
         this.speed = speed;
     }
+
+    @Override
     public void setMoney(int money) {
         this.money = money;
     }
+
+    @Override
     public void setMoneyDrop(int moneyDrop) {
         this.moneyDrop = moneyDrop;
     }
-
-    public void setFireBoss(boolean isFireBoss) {
-        this.isFireBoss = isFireBoss;
-    }
-
-    private void moveToRoom10Center() {
-        // Розраховуємо центр кімнати 10
-        float roomLeft = 495f;
-        float roomRight = 780f;
-        float roomBottom = 575f;
-        float roomTop = 732f;
-
-        float centerX = roomLeft + (roomRight - roomLeft) / 2f - width / 2f;
-        float centerY = roomBottom + (roomTop - roomBottom) / 2f - height / 2f;
-
-        // Розраховуємо напрямок до центру кімнати
-        Vector2 roomCenter = new Vector2(centerX, centerY);
-        Vector2 direction = new Vector2(roomCenter).sub(position).nor();
-
-        // Рухаємося до центру кімнати
-        if (position.dst(roomCenter) > 5f) { // Якщо відстань більше 5 пікселів
-            move(direction);
-        } else {
-            // Якщо ми вже в центрі, зупиняємося
-            velocity.set(0, 0);
-        }
-    }
-}
+} 

@@ -111,6 +111,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
     private boolean fireMiniBossWasHitThisAttack = false;
 
+    // Add this field to the class:
+    private DragonBoss fireBoss = null;
+    private boolean fireBossPlayerEnteredRoom = false;
+
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -354,6 +358,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             miniBossFirst.update(deltaTime, player);
         }
 
+        // Оновлення fireBoss тільки якщо гравець живий
+        if (isLevel3 && fireBoss != null && fireBoss.isAlive() && player.isAlive()) {
+            fireBoss.update(deltaTime, player);
+        }
+
         // Перевірка колізій тільки якщо гравець живий
         if (player.isAlive()) {
             // Перевірка колізії між гравцем та головним босом
@@ -364,6 +373,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             // Перевірка колізії між гравцем та міні-босом
             if (miniBossFirst != null && miniBossFirst.isAlive()) {
                 checkPlayerMiniBossCollision();
+            }
+
+            // Перевірка колізії між гравцем та fireBoss
+            if (isLevel3 && fireBoss != null && fireBoss.isAlive()) {
+                checkPlayerBossCollision(fireBoss);
             }
 
             // Перевірка колізії з пастками (враховуємо тільки нижню частину гравця)
@@ -429,6 +443,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         // Малюємо фонове зображення в оригінальному розмірі
         batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
+
+        // --- Рендер головного боса (тільки якщо не 3 рівень) ---
+        if (boss != null && boss.isAlive() && !isLevel3) {
+            boss.render(batch);
+        }
 
         // Рендеринг пастки
         for (Trap trap : traps) {
@@ -714,27 +733,26 @@ public class PixelAdventuresGame extends ApplicationAdapter {
                 float weaponWidth = fireMiniBoss.getWeapon().getWidth() * 0.5f;
                 float weaponHeight = fireMiniBoss.getWeapon().getHeight() * 0.5f;
                 float offsetX, offsetY, totalRotation;
-                float weaponRotation = 0f;
+                float weaponRotation = -30.0f;
                 float weaponAttackAnimation = 0f;
-                // Set a fixed base rotation of -30 degrees for the weapon (opposite direction)
-                weaponRotation = -30.0f;
                 try {
                     java.lang.reflect.Method getWAA = fireMiniBoss.getClass().getMethod("getWeaponAttackAnimation");
                     weaponAttackAnimation = (float) getWAA.invoke(fireMiniBoss);
                 } catch (Exception e) { /* fallback to 0 */ }
+                boolean flipX = fireMiniBoss.isFacingLeft();
                 if (fireMiniBoss.isFacingLeft()) {
                     offsetX = -13.5f;
-                    offsetY = -3.5f;
+                    offsetY = -10.5f;
                     totalRotation = weaponRotation - weaponAttackAnimation;
                 } else {
                     offsetX = 13.5f;
-                    offsetY = -3.5f;
+                    offsetY = -10.5f;
                     totalRotation = weaponRotation + weaponAttackAnimation;
                 }
                 float weaponX = fireMiniBoss.getPosition().x + fireMiniBoss.getWidth() / 2.0f + offsetX - weaponWidth / 2.0f;
                 float weaponY = fireMiniBoss.getPosition().y + fireMiniBoss.getHeight() / 2.0f + offsetY - weaponHeight / 2.0f;
                 weaponBounds = new Rectangle(weaponX, weaponY, weaponWidth, weaponHeight);
-                batch.draw(fireMiniBoss.getWeapon().getTexture(), weaponX, weaponY, weaponWidth / 2.0f, weaponHeight / 2.0f, weaponWidth, weaponHeight, 1.0f, 1.0f, totalRotation, 0, 0, fireMiniBoss.getWeapon().getTexture().getWidth(), fireMiniBoss.getWeapon().getTexture().getHeight(), false, false);
+                batch.draw(fireMiniBoss.getWeapon().getTexture(), weaponX, weaponY, weaponWidth / 2.0f, weaponHeight / 2.0f, weaponWidth, weaponHeight, 1.0f, 1.0f, totalRotation, 0, 0, fireMiniBoss.getWeapon().getTexture().getWidth(), fireMiniBoss.getWeapon().getTexture().getHeight(), flipX, false);
             }
             // --- Collision: do nothing (allow overlap, no bounce, no stop) ---
             // Draw a smaller health bar above the fire miniboss
@@ -750,7 +768,15 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             float barOffsetY = fireMiniBoss.getHeight();
             float barX = fireMiniBoss.getPosition().x + (fireMiniBoss.getWidth() - barWidth) / 2f;
             float barY = fireMiniBoss.getPosition().y + barOffsetY;
-            float healthPercent = (float) fireMiniBoss.getHealth() / (float) fireMiniBoss.getMaxHealth();
+            // --- Health bar for 3-hit miniboss ---
+            int hitsTaken = 0;
+            try {
+                java.lang.reflect.Field swordHitCountField = fireMiniBoss.getClass().getSuperclass().getDeclaredField("swordHitCount");
+                swordHitCountField.setAccessible(true);
+                hitsTaken = swordHitCountField.getInt(fireMiniBoss);
+            } catch (Exception e) { /* ignore */ }
+            float healthPercent = 1.0f - (hitsTaken / 3.0f);
+            if (healthPercent < 0f) healthPercent = 0f;
             batch.setColor(0.2f, 0.2f, 0.2f, 0.8f);
             batch.draw(fireMiniBossHealthBarPixel, barX - 2f, barY - 2f, barWidth + 4f, barHeight + 4f);
             batch.setColor(1.0f - healthPercent, healthPercent, 0.0f, 1.0f);
@@ -805,6 +831,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         }
 
+        // --- Рендер fireBoss на 3 рівні ---
+        if (isLevel3 && fireBoss != null && fireBoss.isAlive()) {
+            fireBoss.render(batch);
+        }
+
         // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
         player.render(batch);
 
@@ -831,6 +862,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             miniBossIceKnight.render(batch);
         }
 
+        // Render fireBoss
+        if (isLevel3 && fireBoss != null && fireBoss.isAlive()) {
+            fireBoss.render(batch);
+        }
 
         batch.end();
     }
@@ -1115,6 +1150,162 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
     }
 
+    // Check if player is in room 10 of level 3
+    private boolean isPlayerInRoom10() {
+        if (!isLevel3 || player == null) return false;
+
+        // Room 10 boundaries
+        float room10Left = 495f;
+        float room10Right = 780f;
+        float room10Bottom = 575f;
+        float room10Top = 732f;
+
+        // Get player position and dimensions
+        Vector2 playerPos = player.getPosition();
+        float playerWidth = player.getWidth();
+        float playerHeight = player.getHeight();
+
+        // Check if player is at least partially in room 10
+        return playerPos.x + playerWidth > room10Left &&
+               playerPos.x < room10Right &&
+               playerPos.y + playerHeight > room10Bottom &&
+               playerPos.y < room10Top;
+    }
+
+    // Move fireBoss back to center of room 10
+    private void moveFireBossToCenter(float deltaTime) {
+        if (fireBoss == null || !fireBoss.isAlive()) return;
+
+        // Room 10 boundaries
+        float room10Left = 495f;
+        float room10Right = 780f;
+        float room10Bottom = 575f;
+        float room10Top = 732f;
+
+        // Calculate center position
+        float centerX = room10Left + (room10Right - room10Left) / 2f - fireBoss.getWidth() / 2f;
+        float centerY = room10Bottom + (room10Top - room10Bottom) / 2f - fireBoss.getHeight() / 2f;
+
+        // Get current position
+        Vector2 currentPos = fireBoss.getPosition();
+
+        // Calculate direction to center
+        Vector2 direction = new Vector2(centerX - currentPos.x, centerY - currentPos.y);
+
+        // If boss is close to center, just set position directly
+        if (direction.len() < 5f) {
+            currentPos.set(centerX, centerY);
+            try {
+                java.lang.reflect.Field velocityField = fireBoss.getClass().getSuperclass().getDeclaredField("velocity");
+                velocityField.setAccessible(true);
+                Vector2 velocity = (Vector2) velocityField.get(fireBoss);
+                velocity.set(0, 0);
+            } catch (Exception e) {
+                // Ignore reflection errors
+            }
+        } else {
+            // Move towards center
+            direction.nor();
+            try {
+                // Access the velocity field using reflection
+                java.lang.reflect.Field velocityField = fireBoss.getClass().getSuperclass().getDeclaredField("velocity");
+                velocityField.setAccessible(true);
+                Vector2 velocity = (Vector2) velocityField.get(fireBoss);
+
+                // Get boss speed
+                float bossSpeed = 50f; // Default speed
+                try {
+                    java.lang.reflect.Field speedField = fireBoss.getClass().getSuperclass().getDeclaredField("speed");
+                    speedField.setAccessible(true);
+                    bossSpeed = speedField.getFloat(fireBoss);
+                } catch (Exception e) {
+                    // Use default speed if reflection fails
+                }
+
+                // Set velocity to move towards center
+                velocity.set(direction.scl(bossSpeed));
+            } catch (Exception e) {
+                // Fallback if reflection fails
+                currentPos.add(direction.x * 50f * deltaTime, direction.y * 50f * deltaTime);
+            }
+        }
+    }
+
+    // Constrain fireBoss to room 10 boundaries
+    private void constrainFireBossToRoom10() {
+        if (fireBoss == null || !fireBoss.isAlive()) return;
+
+        // Room 10 boundaries
+        float room10Left = 495f;
+        float room10Right = 780f;
+        float room10Bottom = 575f;
+        float room10Top = 732f;
+
+        // Get current position and size
+        Vector2 position = fireBoss.getPosition();
+        float width = 0;
+        float height = 0;
+
+        try {
+            java.lang.reflect.Field widthField = fireBoss.getClass().getSuperclass().getDeclaredField("width");
+            java.lang.reflect.Field heightField = fireBoss.getClass().getSuperclass().getDeclaredField("height");
+            widthField.setAccessible(true);
+            heightField.setAccessible(true);
+            width = widthField.getFloat(fireBoss);
+            height = heightField.getFloat(fireBoss);
+        } catch (Exception e) {
+            // Fallback to getWidth/getHeight if reflection fails
+            width = fireBoss.getWidth();
+            height = fireBoss.getHeight();
+        }
+
+        // Constrain position to room boundaries
+        if (position.x < room10Left) {
+            position.x = room10Left;
+            try {
+                java.lang.reflect.Field velocityField = fireBoss.getClass().getSuperclass().getDeclaredField("velocity");
+                velocityField.setAccessible(true);
+                Vector2 velocity = (Vector2) velocityField.get(fireBoss);
+                velocity.x = 0;
+            } catch (Exception e) {
+                // Ignore reflection errors
+            }
+        }
+        if (position.x + width > room10Right) {
+            position.x = room10Right - width;
+            try {
+                java.lang.reflect.Field velocityField = fireBoss.getClass().getSuperclass().getDeclaredField("velocity");
+                velocityField.setAccessible(true);
+                Vector2 velocity = (Vector2) velocityField.get(fireBoss);
+                velocity.x = 0;
+            } catch (Exception e) {
+                // Ignore reflection errors
+            }
+        }
+        if (position.y < room10Bottom) {
+            position.y = room10Bottom;
+            try {
+                java.lang.reflect.Field velocityField = fireBoss.getClass().getSuperclass().getDeclaredField("velocity");
+                velocityField.setAccessible(true);
+                Vector2 velocity = (Vector2) velocityField.get(fireBoss);
+                velocity.y = 0;
+            } catch (Exception e) {
+                // Ignore reflection errors
+            }
+        }
+        if (position.y + height > room10Top) {
+            position.y = room10Top - height;
+            try {
+                java.lang.reflect.Field velocityField = fireBoss.getClass().getSuperclass().getDeclaredField("velocity");
+                velocityField.setAccessible(true);
+                Vector2 velocity = (Vector2) velocityField.get(fireBoss);
+                velocity.y = 0;
+            } catch (Exception e) {
+                // Ignore reflection errors
+            }
+        }
+    }
+
     @Override
     public void resize(int width, int height) {
         // Оновлюємо viewport при зміні розміру вікна
@@ -1371,7 +1562,6 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
 
         // --- Додаємо мінібоса (fireenemy) у 6 кімнату ---
-        // Room 6: (495,399)-(780,256)
         float fireMiniBossX = 495f + (780f - 495f) / 2f - FIRE_MINIBOSS_SIZE / 2f;
         float fireMiniBossY = 256f + (399f - 256f) / 2f - FIRE_MINIBOSS_SIZE / 2f;
         fireMiniBoss = new MiniBossFirst(fireMiniBossX, fireMiniBossY) {
@@ -1383,14 +1573,12 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         };
         fireMiniBoss.setTarget(player);
-        // Set fire texture
         if (Gdx.files.internal("assets/images/monsters/fireenemy.png").exists()) {
             Texture fireTexture = new Texture(Gdx.files.internal("assets/images/monsters/fireenemy.png"));
             fireMiniBoss.setTexture(fireTexture);
         } else {
             fireMiniBoss.setTexture(player.getTexture());
         }
-        // Set miniboss3weapon as weapon
         if (Gdx.files.internal("assets/images/weapons/miniboss3weapon.png").exists()) {
             fireMiniBossWeapon = new MeleeWeapon("Fire MiniBoss Weapon", FIRE_MINIBOSS_DAMAGE, 1.2f, "assets/images/weapons/miniboss3weapon.png");
         } else {
@@ -1398,5 +1586,51 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         }
         fireMiniBoss.equipWeapon(fireMiniBossWeapon);
         player.addBoss(fireMiniBoss);
+
+        // --- Додаємо fireBoss (DragonBoss) у 10 кімнату ---
+        float fireBossSize = 84f; // трохи більший за мінібоса (70*1.2)
+        float fireBossHealth = 800; // більше, ніж у мінібоса (250*3+)
+        float fireBossSpeed = 90f; // трохи швидший
+        int fireBossMoney = 700; // більше, ніж у мінібоса
+        int fireBossWeaponDamage = 40; // більше, ніж у мінібоса
+        float fireBossWeaponScale = 0.9f; // трохи менша зброя
+
+        float room10Left = 495f;
+        float room10Right = 780f;
+        float room10Bottom = 575f;
+        float room10Top = 732f;
+        float fireBossX = (room10Left + room10Right - fireBossSize) / 2f;
+        float fireBossY = (room10Bottom + room10Top) / 2f - fireBossSize / 2f - 60f;
+        fireBoss = new DragonBoss(fireBossX, fireBossY);
+        fireBoss.setTarget(player);
+        fireBoss.setFireBoss(true); // Встановлюємо що це fireBoss
+        fireBoss.setWidth(fireBossSize);
+        fireBoss.setHeight(fireBossSize);
+        fireBoss.setHealth((int)fireBossHealth);
+        fireBoss.setMaxHealth((int)fireBossHealth);
+        fireBoss.setSpeed(fireBossSpeed);
+        fireBoss.setMoney(fireBossMoney);
+        fireBoss.setMoneyDrop(fireBossMoney);
+
+        if (Gdx.files.internal("assets/images/monsters/fireboss.png").exists()) {
+            Texture fireBossTexture = new Texture(Gdx.files.internal("assets/images/monsters/fireboss.png"));
+            fireBoss.setTexture(fireBossTexture);
+        } else if (Gdx.files.internal("images/monsters/big_boss_1.PNG").exists()) {
+            Texture fallbackTexture = new Texture(Gdx.files.internal("images/monsters/big_boss_1.PNG"));
+            fireBoss.setTexture(fallbackTexture);
+        }
+
+        // Equip fireBoss with a weapon
+        MeleeWeapon fireBossWeapon;
+        if (Gdx.files.internal("assets/images/weapons/sword.png").exists()) {
+            fireBossWeapon = new MeleeWeapon("Fire Boss Weapon", fireBossWeaponDamage, 1.5f, "assets/images/weapons/sword.png");
+        } else {
+            fireBossWeapon = new MeleeWeapon("Fire Boss Weapon", fireBossWeaponDamage, 1.5f, "images/weapons/sword.png");
+        }
+        fireBossWeapon.setScale(fireBossWeaponScale);
+        fireBoss.equipWeapon(fireBossWeapon);
+
+        player.addBoss(fireBoss);
+        fireBossPlayerEnteredRoom = false;
     }
 }

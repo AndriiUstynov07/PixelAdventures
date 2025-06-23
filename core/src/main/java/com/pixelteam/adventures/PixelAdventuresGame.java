@@ -90,6 +90,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private Texture gameOverTexture;
     private boolean showGameOver = false;
 
+    // Win screen variables
+    private Texture winScreenTexture;
+    private boolean showWinScreen = false;
+
     private MiniBossIceKnight miniBossIceKnight;
     private IceBoss iceBoss;
 
@@ -138,6 +142,16 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             System.out.println("Error loading game over screen texture: " + e.getMessage());
             e.printStackTrace();
         }
+
+        // Load win screen
+        try {
+                winScreenTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/winscreen.jpg"));
+            System.out.println("Win screen texture loaded successfully");
+        } catch (Exception e) {
+            System.out.println("Error loading win screen texture: " + e.getMessage());
+            e.printStackTrace();
+        }
+
         // Завантаження фонового зображення
         try {
                 backgroundTexture = new Texture(Gdx.files.internal("assets/images/environment/tiles/map1.png"));
@@ -420,6 +434,11 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         }
 
+        // Check for win condition (fireBoss death on level 3)
+        if (isLevel3 && fireBoss != null && !fireBoss.isAlive() && !showWinScreen) {
+            showWinScreen = true;
+        }
+
         // Очищаємо екран
         ScreenUtils.clear(0, 0, 0, 1);
 
@@ -433,6 +452,20 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             batch.setProjectionMatrix(gameOverCamera.combined);
             batch.begin();
             batch.draw(gameOverTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.end();
+            return;
+        }
+
+        if (showWinScreen) {
+            // Create a new camera for win screen without zoom
+            OrthographicCamera winCamera = new OrthographicCamera();
+            winCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            winCamera.update();
+
+            // Draw win screen using the new camera
+            batch.setProjectionMatrix(winCamera.combined);
+            batch.begin();
+            batch.draw(winScreenTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             batch.end();
             return;
         }
@@ -1354,6 +1387,10 @@ public class PixelAdventuresGame extends ApplicationAdapter {
 
         if (gameOverTexture != null) {
             gameOverTexture.dispose();
+        }
+
+        if (winScreenTexture != null) {
+            winScreenTexture.dispose();
         }
 
         if (iceBoss != null) {

@@ -54,4 +54,8 @@ public class PlayerController {
     public boolean isAttacking() {
         return attacking;
     }
+
+    public void stop() {
+        player.move(new Vector2(0, 0));
+    }
 }

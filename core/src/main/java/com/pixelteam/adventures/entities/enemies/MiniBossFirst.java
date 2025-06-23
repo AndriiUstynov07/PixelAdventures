@@ -588,4 +588,16 @@ public class MiniBossFirst extends Boss {
     public boolean isAttacking() {
         return isAttacking;
     }
+
+    public int getHealth() {
+        return this.health;
+    }
+
+    public int getMaxHealth() {
+        return this.maxHealth;
+    }
+
+    public float getWeaponAttackAnimation() {
+        return this.weaponAttackAnimation;
+    }
 }

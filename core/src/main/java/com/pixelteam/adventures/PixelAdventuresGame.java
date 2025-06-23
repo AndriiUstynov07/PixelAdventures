@@ -100,6 +100,17 @@ public class PixelAdventuresGame extends ApplicationAdapter {
     private int iceSpiritsSpawned;
     private static final int MAX_ICE_SPIRITS = 5;
 
+    // Fire miniboss for level 3
+    private MiniBossFirst fireMiniBoss;
+    private MeleeWeapon fireMiniBossWeapon;
+    private static final float FIRE_MINIBOSS_SIZE = 50f;
+    private static final int FIRE_MINIBOSS_DAMAGE = 25;
+    private static final int FIRE_MINIBOSS_HEALTH = 600;
+    private static com.badlogic.gdx.graphics.Texture fireMiniBossHealthBarPixel;
+    private Vector2 fireMiniBossPrevPlayerPos = new Vector2();
+
+    private boolean fireMiniBossWasHitThisAttack = false;
+
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -669,6 +680,131 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             }
         }
 
+        // Update and render fire miniboss on level 3
+        if (isLevel3 && fireMiniBoss != null && fireMiniBoss.isAlive()) {
+            // --- Prevent boss from getting too close to player ---
+            float minDistanceToPlayer = 40f;
+            float bossToPlayerDist = fireMiniBoss.getPosition().dst(player.getPosition());
+            if (bossToPlayerDist < minDistanceToPlayer) {
+                try {
+                    java.lang.reflect.Field velocityField = fireMiniBoss.getClass().getSuperclass().getDeclaredField("velocity");
+                    velocityField.setAccessible(true);
+                    com.badlogic.gdx.math.Vector2 velocity = (com.badlogic.gdx.math.Vector2) velocityField.get(fireMiniBoss);
+                    velocity.set(0, 0);
+                } catch (Exception e) { /* ignore */ }
+            }
+            fireMiniBoss.update(deltaTime, player);
+            // --- EXPLICITLY UPDATE WEAPON SWING ANIMATION ---
+            try {
+                java.lang.reflect.Method updateWeaponAnim = fireMiniBoss.getClass().getDeclaredMethod("updateWeaponAnimation", float.class);
+                updateWeaponAnim.setAccessible(true);
+                updateWeaponAnim.invoke(fireMiniBoss, deltaTime);
+            } catch (Exception e) { /* ignore */ }
+            // --- Render fire miniboss sprite (with facing) ---
+            if (fireMiniBoss.getTexture() != null && fireMiniBoss.isAlive()) {
+                if (fireMiniBoss.isFacingLeft()) {
+                    batch.draw(fireMiniBoss.getTexture(), fireMiniBoss.getPosition().x + fireMiniBoss.getWidth(), fireMiniBoss.getPosition().y, -fireMiniBoss.getWidth(), fireMiniBoss.getHeight());
+                } else {
+                    batch.draw(fireMiniBoss.getTexture(), fireMiniBoss.getPosition().x, fireMiniBoss.getPosition().y, fireMiniBoss.getWidth(), fireMiniBoss.getHeight());
+                }
+            }
+            // --- Compute weapon bounds and render staff with correct animation (MiniBossFirst logic, but larger) ---
+            Rectangle weaponBounds = null;
+            if (fireMiniBoss.getWeapon() != null && fireMiniBoss.getWeapon().getTexture() != null) {
+                float weaponWidth = fireMiniBoss.getWeapon().getWidth() * 0.5f;
+                float weaponHeight = fireMiniBoss.getWeapon().getHeight() * 0.5f;
+                float offsetX, offsetY, totalRotation;
+                float weaponRotation = 0f;
+                float weaponAttackAnimation = 0f;
+                // Set a fixed base rotation of -30 degrees for the weapon (opposite direction)
+                weaponRotation = -30.0f;
+                try {
+                    java.lang.reflect.Method getWAA = fireMiniBoss.getClass().getMethod("getWeaponAttackAnimation");
+                    weaponAttackAnimation = (float) getWAA.invoke(fireMiniBoss);
+                } catch (Exception e) { /* fallback to 0 */ }
+                if (fireMiniBoss.isFacingLeft()) {
+                    offsetX = -13.5f;
+                    offsetY = -3.5f;
+                    totalRotation = weaponRotation - weaponAttackAnimation;
+                } else {
+                    offsetX = 13.5f;
+                    offsetY = -3.5f;
+                    totalRotation = weaponRotation + weaponAttackAnimation;
+                }
+                float weaponX = fireMiniBoss.getPosition().x + fireMiniBoss.getWidth() / 2.0f + offsetX - weaponWidth / 2.0f;
+                float weaponY = fireMiniBoss.getPosition().y + fireMiniBoss.getHeight() / 2.0f + offsetY - weaponHeight / 2.0f;
+                weaponBounds = new Rectangle(weaponX, weaponY, weaponWidth, weaponHeight);
+                batch.draw(fireMiniBoss.getWeapon().getTexture(), weaponX, weaponY, weaponWidth / 2.0f, weaponHeight / 2.0f, weaponWidth, weaponHeight, 1.0f, 1.0f, totalRotation, 0, 0, fireMiniBoss.getWeapon().getTexture().getWidth(), fireMiniBoss.getWeapon().getTexture().getHeight(), false, false);
+            }
+            // --- Collision: do nothing (allow overlap, no bounce, no stop) ---
+            // Draw a smaller health bar above the fire miniboss
+            if (fireMiniBossHealthBarPixel == null) {
+                com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+                pixmap.setColor(1, 1, 1, 1);
+                pixmap.fill();
+                fireMiniBossHealthBarPixel = new com.badlogic.gdx.graphics.Texture(pixmap);
+                pixmap.dispose();
+            }
+            float barWidth = 35f; // smaller width
+            float barHeight = 5f; // smaller height
+            float barOffsetY = fireMiniBoss.getHeight();
+            float barX = fireMiniBoss.getPosition().x + (fireMiniBoss.getWidth() - barWidth) / 2f;
+            float barY = fireMiniBoss.getPosition().y + barOffsetY;
+            float healthPercent = (float) fireMiniBoss.getHealth() / (float) fireMiniBoss.getMaxHealth();
+            batch.setColor(0.2f, 0.2f, 0.2f, 0.8f);
+            batch.draw(fireMiniBossHealthBarPixel, barX - 2f, barY - 2f, barWidth + 4f, barHeight + 4f);
+            batch.setColor(1.0f - healthPercent, healthPercent, 0.0f, 1.0f);
+            batch.draw(fireMiniBossHealthBarPixel, barX, barY, barWidth * healthPercent, barHeight);
+            batch.setColor(1f, 1f, 1f, 1f);
+            // --- Player attacks fire miniboss: check collision with boss body and staff (MiniBossFirst logic) ---
+            if (player.isAttacking() && player.getWeapon() != null) {
+                Rectangle playerWeaponBounds = player.getWeaponBounds();
+                if (playerWeaponBounds != null) {
+                    // Boss body (MiniBossFirst logic: collisionMargin = 15f)
+                    float collisionMargin = 15f;
+                    Rectangle bossBodyBounds = new Rectangle(
+                        fireMiniBoss.getPosition().x + collisionMargin,
+                        fireMiniBoss.getPosition().y + collisionMargin,
+                        fireMiniBoss.getWidth() - 2 * collisionMargin,
+                        fireMiniBoss.getHeight() - 2 * collisionMargin
+                    );
+                    if (playerWeaponBounds.overlaps(bossBodyBounds)) {
+                        fireMiniBoss.takeDamage(player.getWeapon().getDamage());
+                    }
+                    // Boss staff
+                    if (weaponBounds != null && playerWeaponBounds.overlaps(weaponBounds)) {
+                        fireMiniBoss.takeDamage(player.getWeapon().getDamage());
+                    }
+                }
+            }
+            // --- Check collision with player (weapon only) ---
+            if (player.isAlive()) {
+                checkPlayerFireMiniBossCollision(weaponBounds);
+            }
+            // --- Push player away if colliding with boss body (smaller zone) ---
+            float collisionMargin = 15f;
+            Rectangle bossBodyBounds = new Rectangle(
+                fireMiniBoss.getPosition().x + collisionMargin,
+                fireMiniBoss.getPosition().y + collisionMargin,
+                fireMiniBoss.getWidth() - 2 * collisionMargin,
+                fireMiniBoss.getHeight() - 2 * collisionMargin
+            );
+            if (player.isAlive() && bossBodyBounds.overlaps(player.getBounds())) {
+                Vector2 playerCenter = new Vector2(
+                    player.getPosition().x + player.getWidth() / 2,
+                    player.getPosition().y + player.getHeight() / 2
+                );
+                Vector2 bossCenter = new Vector2(
+                    fireMiniBoss.getPosition().x + fireMiniBoss.getWidth() / 2,
+                    fireMiniBoss.getPosition().y + fireMiniBoss.getHeight() / 2
+                );
+                Vector2 pushDirection = playerCenter.sub(bossCenter).nor();
+                float pushDistance = 2.0f;
+                player.getPosition().add(pushDirection.scl(pushDistance));
+                player.checkBounds();
+            }
+        }
+
         // Рендеринг гравця (метод render вже перевіряє чи гравець живий)
         player.render(batch);
 
@@ -939,6 +1075,46 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         return (isBossFacingLeft && isPlayerToLeft) || (!isBossFacingLeft && !isPlayerToLeft);
     }
 
+    // Overload for MiniBossFirst
+    private boolean isBossFacingPlayer(MiniBossFirst boss, Player player) {
+        Vector2 bossPosition = boss.getPosition();
+        Vector2 playerPosition = player.getPosition();
+        boolean isBossFacingLeft = boss.isFacingLeft();
+        boolean isPlayerToLeft = playerPosition.x < bossPosition.x;
+        return (isBossFacingLeft && isPlayerToLeft) || (!isBossFacingLeft && !isPlayerToLeft);
+    }
+
+    // Method to check collision between player and fire miniboss (weapon only)
+    private void checkPlayerFireMiniBossCollision(Rectangle weaponBounds) {
+        if (!player.isAlive() || fireMiniBoss == null || !fireMiniBoss.isAlive()) return;
+        // Check collision with weapon (MiniBossFirst logic)
+        if (weaponBounds != null && player.getBounds().overlaps(weaponBounds)) {
+            boolean isFacingPlayer = isBossFacingPlayer(fireMiniBoss, player);
+            float distance = player.getPosition().dst(fireMiniBoss.getPosition());
+            float minDamageDistance = 20f;
+            boolean isInAttackRange = distance <= minDamageDistance &&
+                                    Math.abs(player.getPosition().y - fireMiniBoss.getPosition().y) < 15f;
+            boolean isWeaponInAttackPosition = false;
+            if (fireMiniBoss.isFacingLeft()) {
+                isWeaponInAttackPosition = weaponBounds.x < fireMiniBoss.getPosition().x;
+            } else {
+                isWeaponInAttackPosition = weaponBounds.x > fireMiniBoss.getPosition().x;
+            }
+            if (fireMiniBoss.isAttacking() &&
+                player.getDamageCooldown() <= 0 &&
+                isFacingPlayer &&
+                isInAttackRange &&
+                isWeaponInAttackPosition) {
+                MeleeWeapon weapon = fireMiniBoss.getWeapon();
+                if (weapon != null) {
+                    player.takeDamage(weapon.getDamage());
+                    player.setDamageCooldown(1.0f);
+                    fireMiniBossWasHitThisAttack = true;
+                }
+            }
+        }
+    }
+
     @Override
     public void resize(int width, int height) {
         // Оновлюємо viewport при зміні розміру вікна
@@ -1150,13 +1326,7 @@ public class PixelAdventuresGame extends ApplicationAdapter {
         // Make sure player always has a sword
         if (player.getWeapon() == null) {
             if (sword == null) {
-                if (Gdx.files.internal("images/weapons/sword.png").exists()) {
-                    sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
-                } else if (Gdx.files.internal("sword.png").exists()) {
-                    sword = new MeleeWeapon("Sword", 100, 1.0f, "sword.png");
-                } else {
-                    sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
-                }
+                sword = new MeleeWeapon("Sword", 100, 1.0f, "images/weapons/sword.png");
             }
             player.equipWeapon(sword);
         }
@@ -1199,5 +1369,34 @@ public class PixelAdventuresGame extends ApplicationAdapter {
             portalTexture.dispose();
             portalTexture = null;
         }
+
+        // --- Додаємо мінібоса (fireenemy) у 6 кімнату ---
+        // Room 6: (495,399)-(780,256)
+        float fireMiniBossX = 495f + (780f - 495f) / 2f - FIRE_MINIBOSS_SIZE / 2f;
+        float fireMiniBossY = 256f + (399f - 256f) / 2f - FIRE_MINIBOSS_SIZE / 2f;
+        fireMiniBoss = new MiniBossFirst(fireMiniBossX, fireMiniBossY) {
+            {
+                this.width = FIRE_MINIBOSS_SIZE;
+                this.height = FIRE_MINIBOSS_SIZE;
+                this.health = FIRE_MINIBOSS_HEALTH;
+                this.maxHealth = FIRE_MINIBOSS_HEALTH;
+            }
+        };
+        fireMiniBoss.setTarget(player);
+        // Set fire texture
+        if (Gdx.files.internal("assets/images/monsters/fireenemy.png").exists()) {
+            Texture fireTexture = new Texture(Gdx.files.internal("assets/images/monsters/fireenemy.png"));
+            fireMiniBoss.setTexture(fireTexture);
+        } else {
+            fireMiniBoss.setTexture(player.getTexture());
+        }
+        // Set miniboss3weapon as weapon
+        if (Gdx.files.internal("assets/images/weapons/miniboss3weapon.png").exists()) {
+            fireMiniBossWeapon = new MeleeWeapon("Fire MiniBoss Weapon", FIRE_MINIBOSS_DAMAGE, 1.2f, "assets/images/weapons/miniboss3weapon.png");
+        } else {
+            fireMiniBossWeapon = new MeleeWeapon("Fire MiniBoss Weapon", FIRE_MINIBOSS_DAMAGE, 1.2f, "images/weapons/sword.png");
+        }
+        fireMiniBoss.equipWeapon(fireMiniBossWeapon);
+        player.addBoss(fireMiniBoss);
     }
 }
